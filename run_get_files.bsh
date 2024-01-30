@@ -1,0 +1,41 @@
+#!/bin/bash
+# Before running, conda activate sbanalyst
+# Cruise directory for output will be created
+# *.tgz.sb documentation, etc. files will be untarred
+
+projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
+
+####################
+## Setup
+# NO SPACES in LIS file. LIS files are retained in projDir.
+cruise='EXPORTSNA_Boss'
+iFile=${projDir}'/20240112_Boss_EXPORTS_EXPORTSNA_PySAS.lis'
+# cruise='Belgium_2021'
+# iFile=${projDir}'/Twardowski_AQUALOOKS_Belgium_2021_AOP_rrs_Lu_Ed.lis'
+# cruise='JackBlanton'
+# iFile=${projDir}'/Rivero-Calle_SeaHAWK_JackBlanton_20221031_Rrs.lis'
+# cruise='viirs_2019_foster'
+# iFile=${projDir}'/Mannino_VIIRS_validation_2019_foster.lis'
+# cruise='RSWQ_2023'
+# iFile=${projDir}'/20231115_silsbe_Missouri_Reservoirs_RSWQ_MO_RSWQ_2023_radiometry.lis'
+echo 'Downloading for LIS file: ' $iFile
+####################
+
+python /Users/daurin/GitRepos/sbanalyst/get_files.py --ifile=$iFile
+
+# Make a folder and move new data
+if [ ! -d "${projDir}/${cruise}" ]; then
+    mkdir ${projDir}/${cruise}
+fi
+mv *.sb ${projDir}/${cruise}/
+
+# Tidy up and create a filelist.txt for use in QC scripts
+for file in ${projDir}/${cruise}/*.*; do
+    if [[ $file == *.tgz.sb ]];then
+        echo 'Renaming/Untarzipping ' $file
+        newFilename=${file/.sb/}
+        mv $file $newFilename
+        tar -xvf $newFilename -C ${projDir}/${cruise}
+    fi
+done
+ls ${projDir}/${cruise}/*.sb > ${projDir}/${cruise}/filelist.txt
