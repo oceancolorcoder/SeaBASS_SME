@@ -18,3 +18,5 @@ __pycache__/
 *.asv
 /dat/*.mat
 /plt/*
+*.env
+*.all
