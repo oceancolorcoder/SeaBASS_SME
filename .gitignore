@@ -1,2 +1,4 @@
 *.png
+*.asv
+*.mat
 /plt/*
