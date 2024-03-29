@@ -1,4 +1,20 @@
+# pyenv
+.python-version
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+.pylintrc
+
+# vscode
+.vscode/
+
+# Backup stores
+~*
+.DS_Store
+
+*.log
 *.png
 *.asv
-*.mat
+/dat/*.mat
 /plt/*

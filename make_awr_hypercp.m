@@ -5,6 +5,8 @@
 % files, and are related one-to-one in time and space, as reported in the
 % Ancillary structure.
 % Files obtained using run_get_files.bsh
+%
+% D. Aurin NASA/GSFC March 2024
 
 wipe
 
@@ -20,7 +22,7 @@ projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
 outDbase = sprintf('dat/%s.mat',cruise);
 disp(cruise)
 SASDir = fullfile(projPath,'L2');
-SASlist = dir([SASDir '/*.hdf']);
+SASlist = dir([SASDir '/*.hdf']); % <-- Filter out STATION data? Probably.
 fprintf('Number of files found: %d\n', numel(SASlist))
 
 ensemble = 0;

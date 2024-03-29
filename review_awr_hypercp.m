@@ -2,25 +2,14 @@
 % Add AVW and QWIP if not already included in Derived Products
 % Display spectral (ir)radiance and reflectance with ancillary data
 % dashboard
-% Rank as   1) Validation, NOMAD, and SeaBASS
-%           2) NOMAD and SeaBASS
-%           3) SeaBASS only
-%           4) Fail
-%   These designations are subjective, but technically for 1 it would need
-%   to be cloud free which would have to come from ancillary data.
-
-% NOTE: Autonomous collections generally have many hundreds of spectra.
-% There is no good, practical way to inspect every single one... This is
-% going to be a problem.
 
 % Screen on QWIP,RelAz,Wind,SZA, and visual inspection
 %
 % D. Aurin NASA/GSFC March 2024
 
-%%
+%% Setup
 wipe
 fontName = machine_prefs;
-%% Setup
 cruise = 'EXPORTSNA_NASA';
 % cruise = 'EXPORTSNA_Boss';
 
@@ -29,7 +18,7 @@ plotQWIP = 0;
 plotFlags = 1;
 manualSelection = 1;
 
-% Thresholds
+% Thresholds for validation
 tRelAz = [88 137]; % M99, Z17, IOCCG
 tWind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
 tSZA = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
@@ -40,7 +29,7 @@ cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where
 
 %% Load and overview
 if clobber
-    load(sprintf('dat/%s.mat',cruise))
+    load(sprintf('dat/%s.mat',cruise)) % SASData from make_database_hypercp.m
     dateTime = datetime([SASData.Ancillary.datenum],'ConvertFrom','datenum','TimeZone','UTC');
     nEns = size([SASData.Ancillary.datenum],2);
 
@@ -185,7 +174,7 @@ set(fh3,'position',[1926         381        1196         979])
 
 exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
 
-%% Figure 1; timeline Chl, AVW, QWIP, Wei score, ..
+%% Figure timeline Chl, AVW, QWIP, Wei score, ..
 fh4 = figure;
 set(fh4,'Position',[200 200 850 950])
 ax1 = subplot(4,1,1);
@@ -226,19 +215,29 @@ ph8 = plot(dateTime,relAz,'marker','.','markersize',18);
 ylabel('Relative Azimuth')
 
 set([ax1 ax2 ax3 ax4],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
+exportgraphics(fh4,sprintf('plt/%s_timeline.png',cruise))
 
 %% Manual screening of spectra
 if manualSelection
+    input('Continue now? (enter)');
+    close all
+    fh5 = figure; 
+    set(fh5,'position',[1926         381        1196         979])
+    plot(wave,Rrs,'k')
+    hold on    
+    flagSpectra(ax1,wave,Rrs,flags,0)
+    ylabel('R_{rs} [sr^{-1}]')    
+
     disp('Manual Screening')
     disp('Zoom to spectrum of interest and hit Continue')
     disp('Left mouse to flag spectrum. Continue to save and move on. Try again to ignore last.')
     disp('Middle mouse to exit and save.')
+    flag = zeros(1,nEns);
     for tries=1:10
-
-        h1 = uicontrol(fh3,'Style', 'pushbutton', 'String', 'Continue',...
+        h1 = uicontrol(fh5,'Style', 'pushbutton', 'String', 'Continue',...
             'Position', [5 100 50 25], 'Callback', 'uiresume');
         uicontrol(h1)
-        uiwait(fh3)
+        uiwait(fh5)
 
         [x,y] = ginput(1);
 
@@ -253,16 +252,27 @@ if manualSelection
         uicontrol(h3)
         uicontrol(h4)
         uiwait
-        if butt == 1
+        if butt == 0
+            continue
+        elseif butt == 1
             [wv,windex] = find_nearest(x,wave);
             RrsX = Rrs(:,windex);
             [rrs,Rindex] = find_nearest(y,RrsX);
-            plot(wave,Rrs())
-            disp([x,y])
-            continue
+            plot(wave,Rrs(Rindex,:),'k','LineWidth',3)
+            flag(Rindex) = 1;
+           fprintf('Index: %d\n',Rindex) 
+           disp(flag(Rindex))
+            % disp([x,y])
+            % continue
+        elseif butt == 3
+            break
         end
     end
 end
+flags.Manual = flag;
+save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
+        "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
+
 
 %%
 function flagSpectra(ax,wave,Var,flags,leg)

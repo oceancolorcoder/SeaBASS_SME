@@ -1,9 +1,16 @@
 % Using readsb.m (in MATLAB_embedded, updated No 2023), pull in all the
-% files obtained using run_get_files.bsh
+% files obtained using run_get_files.bsh.
+%
+% Output:
+%   dBase structure with relevant fields (e.g., datetime, Rrs, etc.)
+%
+% D. Aurin NASA/GSFC March 2024
 
 wipe
-% cruise = 'viirs_2019_foster';
-cruise = 'RSWQ_2023'; % single spectrum per file
+% cruise = 'viirs_2019_foster'; % Use make_database_hypercp.m
+% cruise = 'RSWQ_2023'; % single spectrum per file
+% cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
+cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
 
 [fontName,projPath,imgPath] = machine_prefs();
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
@@ -18,7 +25,8 @@ for i=1:length(fileList{1})
     file = fileList{1}{i};
     if ~contains(file,'tgz')
 
-        fp = fullfile(projPath,file);
+        % fp = fullfile(projPath,file);
+        fp = file;
         [data, sbHeader, headerArray, dataArray] = readsb(fp,'MakeStructure', true);
         fNames = fieldnames(data);
 
@@ -27,8 +35,7 @@ for i=1:length(fileList{1})
 
         % Need to determine the organization of the data
         if sum(strcmpi(fNames,'wavelength')) ~= 0
-            disp('Found wavelength column')
-            disp('This is a single sample file')            
+            disp('Found wavelength column. Single spectrum file')            
             % datenum is repeated
             dBase(i).datetime = datetime(data.datenum(1),'ConvertFrom','datenum','TimeZone','UTC');
             dBase(i).latitude = extractfield(sbHeader,'north_latitude');
@@ -41,13 +48,21 @@ for i=1:length(fileList{1})
             dBase(i).rrs_sd = data.rrs_sd';
             dBase(i).es = data.ed';
             dBase(i).es_sd = data.ed_sd';
+            dBase(i).wavelength = data.wavelength';
 
             missing = extractfield(sbHeader,'missing');
 
+        else
+            if sum(strcmpi(fNames,'time')) ~= 0
+                if length(data.time) > 1
+                    disp('Multiple timestamps found. Multi-spectrum file.')
+                end
+            end
         end
     end
 end
 
+% Nan out the nans
 fNames = fieldnames(dBase);
 for col=1:length(fNames)
     dims = size(dBase(1).(fNames{col}));
@@ -61,8 +76,12 @@ for col=1:length(fNames)
     else
         for row=1:size(dBase,2)
             test = dBase(row).(fNames{col});
-            test(test == missing) = nan
+            test(test == missing) = nan;
+            dBase(row).(fNames{col}) = test;
+        end
     end
 end
+
+save(['dat/' cruise],'dBase')
     
 
