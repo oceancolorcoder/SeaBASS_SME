@@ -10,23 +10,30 @@
 %% Setup
 wipe
 fontName = machine_prefs;
+
+% Set to true unless building .env.all
+validation = 0;
+
 cruise = 'EXPORTSNA_NASA';
 % cruise = 'EXPORTSNA_Boss';
 
-clobber = 0;
+clobber = 1;
 plotQWIP = 0;
-plotFlags = 1;
-manualSelection = 1;
+plotFlags = 0;
+manualSelection = 0;
 
-% Thresholds for validation
 tRelAz = [88 137]; % M99, Z17, IOCCG
-tWind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
 tSZA = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
+tWind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
 tQWIP = 0.2; % Dierssen et al. 2022
 tQA = 0.2; % This is more experimental. Monitor it, but don't filter it.
 tCloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likely to be the worst. This is experimental.
 cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast
-
+if validation
+    % Thresholds for validation
+    tWind = 6.5; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
+    tQWIP = 0.17; % Experimental
+end
 %% Load and overview
 if clobber
     load(sprintf('dat/%s.mat',cruise)) % SASData from make_database_hypercp.m
@@ -117,161 +124,216 @@ if clobber
         relAz = [SASData.Ancillary.REL_AZ];
     end
 
-    %% Apply flags
-    flags.Cloud = cloud > tCloud(1) & cloud < tCloud(2); %Partly cloudy
+    %% Set flags
+    if validation
+        flags.Cloud = cloud > tCloud(1) & cloud < tCloud(2); %Partly cloudy
+    else
+        flags.Cloud = false(1,length(cloud));  
+    end
     flags.Wind = wind > tWind;
     flags.SZA = sza < tSZA(1) | sza > tSZA(2);
-    flags.RelAz = relAz<tRelAz(1) | relAz>tRelAz(2);
+    flags.RelAz = abs(relAz)<tRelAz(1) | abs(relAz)>tRelAz(2);
     flags.QWIP = qwip > tQWIP;
     flags.QA = qa < tQA;
 
     save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
         "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
+
+    %% Apply flags
+    flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP];
+
+    %% Write CSV file for awr2env.py
+    % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
+    m(:,1) = year(dateTime);
+    m(:,2) = month(dateTime);
+    m(:,3) = day(dateTime);
+    m(:,4) = hour(dateTime);
+    m(:,5) = minute(dateTime);
+    m(:,6) = second(dateTime);
+    if validation
+        csvOutFile = sprintf('dat/%s_flags.csv',cruise);
+        m(:,7) = 2*int8(~flag); % 0, 1, or 2 for reject, seabass-only, validation
+    else
+        csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
+        m(:,7) = int8(~flag); % 0, 1, or 2 for reject, seabass-only, validation
+    end
+
+    writematrix(m,csvOutFile)
 else
     load(sprintf('dat/%s_flags.mat',cruise))
     nEns = size(Rrs,1);
 end
 
 %% Show spectra with filtered data
-fh3 = figure;
-th1 = tiledlayout(2,2);
-ax1 = nexttile;
-plot(wave,Rrs,'k')
-hold on
-flagSpectra(ax1,wave,Rrs,flags,1)
-ylabel('R_{rs} [sr^{-1}]')
-
-ax2 = nexttile;
-plot(wave,Es,'k')
-hold on
-flagSpectra(ax2,wave,Es,flags,0)
-ylabel('E_s [\muW cm^{-2} nm^{-1}]')
-
-ax3 = nexttile;
-plot(wave,Li,'k')
-hold on
-flagSpectra(ax3,wave,Li,flags,0)
-ylabel('L_i [\muW cm^{-2} nm^{-1} sr^{-1}]')
-
-ax4 = nexttile;
-plot(wave,Lw,'k')
-hold on
-flagSpectra(ax4,wave,Lw,flags,0)
-ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
-
-th1 = text(0.75,0.9,sprintf('Cloud: %d',sum(flags.Cloud)),'Units','normalized');
-th2 = text(0.75,0.85,sprintf('Wind: %d',sum(flags.Wind)),'Units','normalized');
-th3 = text(0.75,0.8,sprintf('SZA: %d',sum(flags.SZA)),'Units','normalized');
-th4 = text(0.75,0.75,sprintf('RelAz: %d',sum(flags.RelAz)),'Units','normalized');
-th5 = text(0.75,0.7,sprintf('QWIP: %d',sum(flags.QWIP)),'Units','normalized');
-th6 = text(0.75,0.65,sprintf('QA: %d',sum(flags.QA)),'Units','normalized','Color','r');
-
-gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
-th7 = text(0.75,0.6,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
-
-set([ax1 ax2 ax3 ax4],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
-set(fh3,'position',[1926         381        1196         979])
-
-exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
-
-%% Figure timeline Chl, AVW, QWIP, Wei score, ..
-fh4 = figure;
-set(fh4,'Position',[200 200 850 950])
-ax1 = subplot(4,1,1);
-title(strrep(cruise,'_','-'))
-yyaxis(ax1,'left')
-ph1 = plot(dateTime,chl,'marker','.','markersize',18);
-ylabel('chlor_a')
-
-yyaxis(ax1,'right')
-ph2 = plot(dateTime,avw,'marker','.','markersize',18);
-ylabel('AVW [nm]')
-
-ax2 = subplot(4,1,2);
-yyaxis(ax2,'left')
-ph3 = plot(dateTime,qwip,'marker','.','markersize',18);
-ylabel('QWIP')
-
-yyaxis(ax2,'right')
-ph4 = plot(dateTime,qa,'marker','.','markersize',18);
-ylabel('QA_score')
-
-ax3 = subplot(4,1,3);
-yyaxis(ax3,'left')
-ph5 = plot(dateTime,cloud,'marker','.','markersize',18);
-ylabel('Cloud [%]')
-
-yyaxis(ax3,'right')
-ph6 = plot(dateTime,wind,'marker','.','markersize',18);
-ylabel('Wind [m/s]')
-
-ax4 = subplot(4,1,4);
-yyaxis(ax4,'left')
-ph7 = plot(dateTime,sza,'marker','.','markersize',18);
-ylabel('SZA')
-
-yyaxis(ax4,'right')
-ph8 = plot(dateTime,relAz,'marker','.','markersize',18);
-ylabel('Relative Azimuth')
-
-set([ax1 ax2 ax3 ax4],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
-exportgraphics(fh4,sprintf('plt/%s_timeline.png',cruise))
-
-%% Manual screening of spectra
-if manualSelection
-    input('Continue now? (enter)');
-    close all
-    fh5 = figure; 
-    set(fh5,'position',[1926         381        1196         979])
+if plotFlags
+    fh3 = figure;
+    th1 = tiledlayout(2,2);
+    ax1 = nexttile;
     plot(wave,Rrs,'k')
-    hold on    
-    flagSpectra(ax1,wave,Rrs,flags,0)
-    ylabel('R_{rs} [sr^{-1}]')    
+    hold on
+    flagSpectra(ax1,wave,Rrs,flags,1)
+    ylabel('R_{rs} [sr^{-1}]')
 
-    disp('Manual Screening')
-    disp('Zoom to spectrum of interest and hit Continue')
-    disp('Left mouse to flag spectrum. Continue to save and move on. Try again to ignore last.')
-    disp('Middle mouse to exit and save.')
-    flag = zeros(1,nEns);
-    for tries=1:10
-        h1 = uicontrol(fh5,'Style', 'pushbutton', 'String', 'Continue',...
-            'Position', [5 100 50 25], 'Callback', 'uiresume');
-        uicontrol(h1)
-        uiwait(fh5)
+    ax2 = nexttile;
+    plot(wave,Es,'k')
+    hold on
+    flagSpectra(ax2,wave,Es,flags,0)
+    ylabel('E_s [\muW cm^{-2} nm^{-1}]')
 
-        [x,y] = ginput(1);
+    ax3 = nexttile;
+    plot(wave,Li,'k')
+    hold on
+    flagSpectra(ax3,wave,Li,flags,0)
+    ylabel('L_i [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
-        plot(x,y,'k*')
-        h2 = uicontrol('Style', 'pushbutton', 'String', 'Continue',...
-            'Position', [5 100 50 25], 'Callback', 'butt=1; uiresume');
-        h3 = uicontrol('Style', 'pushbutton', 'String', 'Try Again',...
-            'Position', [5 50 50 25], 'Callback','butt=0; uiresume');
-        h4 = uicontrol('Style', 'pushbutton', 'String', 'Exit',...
-            'Position', [5 5 50 25], 'Callback','butt=3; uiresume');
-        uicontrol(h2)
-        uicontrol(h3)
-        uicontrol(h4)
-        uiwait
-        if butt == 0
-            continue
-        elseif butt == 1
-            [wv,windex] = find_nearest(x,wave);
-            RrsX = Rrs(:,windex);
-            [rrs,Rindex] = find_nearest(y,RrsX);
-            plot(wave,Rrs(Rindex,:),'k','LineWidth',3)
-            flag(Rindex) = 1;
-           fprintf('Index: %d\n',Rindex) 
-           disp(flag(Rindex))
-            % disp([x,y])
-            % continue
-        elseif butt == 3
-            break
+    ax4 = nexttile;
+    plot(wave,Lw,'k')
+    hold on
+    flagSpectra(ax4,wave,Lw,flags,0)
+    ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
+
+    th1 = text(0.75,0.9,sprintf('Cloud: %d',sum(flags.Cloud)),'Units','normalized');
+    th2 = text(0.75,0.85,sprintf('Wind: %d',sum(flags.Wind)),'Units','normalized');
+    th3 = text(0.75,0.8,sprintf('SZA: %d',sum(flags.SZA)),'Units','normalized');
+    th4 = text(0.75,0.75,sprintf('RelAz: %d',sum(flags.RelAz)),'Units','normalized');
+    th5 = text(0.75,0.7,sprintf('QWIP: %d',sum(flags.QWIP)),'Units','normalized');
+    th6 = text(0.75,0.65,sprintf('QA: %d',sum(flags.QA)),'Units','normalized','Color','r');
+
+    gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
+    th7 = text(0.75,0.6,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
+
+    set([ax1 ax2 ax3 ax4],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+    set(fh3,'position',[1926         381        1196         979])
+
+    exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
+
+    %% Figure timeline Chl, AVW, QWIP, Wei score, ..
+    fh4 = figure;
+    set(fh4,'Position',[200 200 850 950])
+    ax1 = subplot(4,1,1);
+    title(strrep(cruise,'_','-'))
+    yyaxis(ax1,'left')
+    ph1 = plot(dateTime,chl,'marker','.','markersize',18);
+    ylabel('chlor_a')
+
+    yyaxis(ax1,'right')
+    ph2 = plot(dateTime,avw,'marker','.','markersize',18);
+    ylabel('AVW [nm]')
+
+    ax2 = subplot(4,1,2);
+    yyaxis(ax2,'left')
+    ph3 = plot(dateTime,qwip,'marker','.','markersize',18);
+    ylabel('QWIP')
+
+    yyaxis(ax2,'right')
+    ph4 = plot(dateTime,qa,'marker','.','markersize',18);
+    ylabel('QA_score')
+
+    ax3 = subplot(4,1,3);
+    yyaxis(ax3,'left')
+    ph5 = plot(dateTime,cloud,'marker','.','markersize',18);
+    ylabel('Cloud [%]')
+
+    yyaxis(ax3,'right')
+    ph6 = plot(dateTime,wind,'marker','.','markersize',18);
+    ylabel('Wind [m/s]')
+
+    ax4 = subplot(4,1,4);
+    yyaxis(ax4,'left')
+    ph7 = plot(dateTime,sza,'marker','.','markersize',18);
+    ylabel('SZA')
+
+    yyaxis(ax4,'right')
+    ph8 = plot(dateTime,relAz,'marker','.','markersize',18);
+    ylabel('Relative Azimuth')
+
+    set([ax1 ax2 ax3 ax4],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
+    if validation
+        exportgraphics(fh4,sprintf('plt/%s_timeline.png',cruise))
+    else
+        exportgraphics(fh4,sprintf('plt/%s_all_timeline.png',cruise))
+    end
+
+
+    %% Manual screening of spectra
+    if manualSelection
+        input('Continue now? (enter)');
+        close all
+        fh5 = figure;
+        set(fh5,'position',[1926         381        1196         979])
+        plot(wave,Rrs,'k')
+        hold on
+        flagSpectra(ax1,wave,Rrs,flags,0)
+        ylabel('R_{rs} [sr^{-1}]')
+
+        disp('Manual Screening')
+        disp('Zoom to spectrum of interest and hit Continue')
+        disp('Left mouse to flag spectrum. Continue to save and move on. Try again to ignore last.')
+        disp('Middle mouse to exit and save.')
+        flag = zeros(1,nEns);
+        for tries=1:10
+            h1 = uicontrol(fh5,'Style', 'pushbutton', 'String', 'Continue',...
+                'Position', [5 100 50 25], 'Callback', 'uiresume');
+            uicontrol(h1)
+            uiwait(fh5)
+
+            [x,y] = ginput(1);
+
+            plot(x,y,'k*')
+            h2 = uicontrol('Style', 'pushbutton', 'String', 'Continue',...
+                'Position', [5 100 50 25], 'Callback', 'butt=1; uiresume');
+            h3 = uicontrol('Style', 'pushbutton', 'String', 'Try Again',...
+                'Position', [5 50 50 25], 'Callback','butt=0; uiresume');
+            h4 = uicontrol('Style', 'pushbutton', 'String', 'Exit',...
+                'Position', [5 5 50 25], 'Callback','butt=3; uiresume');
+            uicontrol(h2)
+            uicontrol(h3)
+            uicontrol(h4)
+            uiwait
+            if butt == 0
+                continue
+            elseif butt == 1
+                [wv,windex] = find_nearest(x,wave);
+                RrsX = Rrs(:,windex);
+                [rrs,Rindex] = find_nearest(y,RrsX);
+                plot(wave,Rrs(Rindex,:),'k','LineWidth',3)
+                flag(Rindex) = 1;
+                fprintf('Index: %d\n',Rindex)
+                disp(flag(Rindex))
+                % disp([x,y])
+                % continue
+            elseif butt == 3
+                break
+            end
         end
     end
+    flags.Manual = flag;
+    %% Apply flags
+    flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
+        [flags.Manual];
+
+    %% Write CSV file for awr2env.py
+    % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
+    if validation
+        csvOutFile = sprintf('dat/%s_flags.csv',cruise);
+        m(:,7) = 2*int8(~flag); % 0, 1, or 2 for reject, seabass-all, validation
+    else
+        csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
+        m(:,7) = int8(~flag); % 0, 1, or 2 for reject, seabass-all, validation
+    end
+
+    m(:,1) = year(dateTime);
+    m(:,2) = month(dateTime);
+    m(:,3) = day(dateTime);
+    m(:,4) = hour(dateTime);
+    m(:,5) = minute(dateTime);
+    m(:,6) = second(dateTime);
+
+    writematrix(m,csvOutFile)
 end
-flags.Manual = flag;
+
 save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
-        "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
+    "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
 
 
 %%

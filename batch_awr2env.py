@@ -11,14 +11,17 @@ from subprocess import call
 # import awr2env
 
 cruise='EXPORTSNA_NASA'
+all=True
+
 if sys.platform == 'darwin':
     basePath = '/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 else:
     basePath = '/accounts/daurin/Projects/SeaBASS/JIRA_tickets'
+
 inPath = os.path.join(basePath,cruise,'test')
 
 type='Es'
 fileList = glob.glob(os.path.join(inPath,f'*{type}*.sb'))
 
 call(['python','awr2env.py','--seabass_file'] + fileList)
-# call(['python','awr2env.py'])
+

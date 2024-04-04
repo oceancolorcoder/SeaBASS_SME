@@ -1,4 +1,6 @@
 
+See README.md
+
 %% run_get_files.bsh
 %   Inputs: 
 %       [filelistname].lis from Jira
