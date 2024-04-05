@@ -12,6 +12,10 @@ import shutil
 import awr2env
 
 cruise='EXPORTSNA_NASA'
+metadata={}
+metadata['dataType']='AOP'
+metadata['instrument']='HyperCP'
+metadata['subInstrument']='pySAS'
 
 
 if sys.platform == 'darwin':
@@ -29,6 +33,7 @@ for all in [True,False]:
         # call(['python','awr2env.py','--seabass_file'] + fileList)
         dict_args={}
         dict_args['seabass_file'] = fileList
+        dict_args['metadata'] = metadata
         if all:
             dict_args['flag_file'] = f'./dat/{cruise}_all_flags.csv'
             dict_args['all'] = True

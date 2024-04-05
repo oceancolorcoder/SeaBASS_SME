@@ -48,7 +48,7 @@
  tQWIP = 0.2; % Dierssen et al. 2022\
  tQA = 0.2; % This is more experimental. Monitor it, but don't filter it.\
  tCloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likely to be the worst. This is experimental.\
- cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast\
+ cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where Li(750)/Es(750)<0.05 is clear, Li(750)/Es(750)>0.3 is fully overcast. Automated cloud indexes are only used where field notes on sky conditions was not available.
 
 % Thresholds for validation\
 tRelAz = [89 136]; % M99, Z17, IOCCG\

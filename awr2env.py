@@ -21,8 +21,13 @@ def main(dict_args):
     fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
 
+    metadata = dict_args['metadata']
     print(f'Flag file: {dict_args['flag_file']}')
-    print(f'All? {dict_args['all']}')
+    print(f'Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ')
+    if {dict_args['all']}:
+        print('NOMAD files')
+    else:
+        print('VALIDATION files')
 
     timezone = pytz.utc
     filein_flag = Path(dict_args['flag_file'])
@@ -131,9 +136,11 @@ def main(dict_args):
             out_dir = Path('./') # Could change this to be the same folder
 
             if dict_args['all'] == True:
-                fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env.all'
+                fileout_sb = \
+                    f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env.all"
             else:
-                fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env'
+                fileout_sb = \
+                    f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env"
 
             lat_lis  = []
             lon_lis  = []
