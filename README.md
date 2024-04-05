@@ -9,7 +9,7 @@
 ## make_awr_seabass.m
     Inputs:
        cruisename
-       SeaBASS files from .list
+       SeaBASS files from .lis
 
     Outputs:
        dat/[cruisename].mat database containing dBase structure
