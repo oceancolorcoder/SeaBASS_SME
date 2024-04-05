@@ -36,17 +36,24 @@
 
  Add AVW and QWIP if not already included in Derived Products
  Display spectral (ir)radiance and reflectance with ancillary data
- dashboard (timeline)
+ dashboard (timeline)\
 
- Flag for QWIP,RelAz,Wind,SZA, and visual inspection
- Thresholds
- tRelAz = [88 137];  M99, Z17, IOCCG
- tWind = 10;   6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
- tSZA = [18 62];  e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
- tQWIP = 0.2;  Dierssen et al. 2022
- tQA = 0.2;  This is more experimental. Monitor it, but don't filter it.
- tCloud = [20 80];  Clear and fully overcast should be okay. 20 - 80 are likely to be the worst. This is experimental.
- cloudIndexes = [0.05 0.3];  From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast
+ Flag for QWIP,RelAz,Wind,SZA, negative Rrs, and visual inspection\
+ Thresholds\
+ For .env.all:\
+ negRrs = [380 680]; % Spectral range of negatives to eliminate from all sets\
+ tRelAz = [87 138]; % M99, Z17, IOCCG\
+ tSZA = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016\
+ tWind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,\
+ tQWIP = 0.2; % Dierssen et al. 2022\
+ tQA = 0.2; % This is more experimental. Monitor it, but don't filter it.\
+ tCloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likely to be the worst. This is experimental.\
+ cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast\
+
+% Thresholds for validation\
+tRelAz = [89 136]; % M99, Z17, IOCCG\
+tWind = 7; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,\
+tQWIP = 0.17; % Experimental\
 
 ## review_awr_seabass.m
     Inputs:
@@ -54,20 +61,21 @@
 
    Otherwise the same as review_awr_hypercp.m
 
-## awr2env.py
-    Inputs:
-        SeaBASS files identified in batch_awr2env.py
-
-    Outputs:
-        *.env.all file
-
-A work in progress. Currently accommodates hyperspectral Es, Rrs, but overwrites the same [cruise].awr.[pi].env.all file with every file in the input list. Also, need to introduce timestamp screening to only output data for validation, non-validation, etc.
-
 ## batch_awr2env.py
     Inputs:
         List of .sb files to process
 
     Outputs:
         .env.all files
+Runs awr2env.py
+
+## awr2env.py
+    Inputs:
+        SeaBASS files identified in batch_awr2env.py (Es, Rrs)
+
+    Outputs:
+        *.env.all file for NOMAD
+        *.env file for VALIDATION
+Matches spectra to within 10s of flags developed in review_awr_TYPE.m and only includes spectra that passed all flags.
 
 

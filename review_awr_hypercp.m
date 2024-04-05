@@ -19,10 +19,11 @@ cruise = 'EXPORTSNA_NASA';
 
 clobber = 1;
 plotQWIP = 0;
-plotFlags = 0;
+plotFlags = 1;
 manualSelection = 0;
 
-tRelAz = [88 137]; % M99, Z17, IOCCG
+negRrs = [380 680]; % Spectral range of negatives to eliminate from all sets
+tRelAz = [87 138]; % M99, Z17, IOCCG
 tSZA = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
 tWind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
 tQWIP = 0.2; % Dierssen et al. 2022
@@ -31,7 +32,8 @@ tCloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likel
 cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast
 if validation
     % Thresholds for validation
-    tWind = 6.5; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
+    tRelAz = [89 136]; % M99, Z17, IOCCG
+    tWind = 7; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
     tQWIP = 0.17; % Experimental
 end
 %% Load and overview
@@ -102,6 +104,9 @@ if clobber
     end
     if sum(contains(fieldnames(SASData.Ancillary),'CLOUD')) > 0
         cloud = [SASData.Ancillary.CLOUD]; % Percent
+
+        % Fix bad interpolation in EXPORTSNA Ancillary file
+        cloud(cloud<0) = missing;
     else
         cloud = nan(1,nEns);
     end
@@ -126,39 +131,45 @@ if clobber
 
     %% Set flags
     if validation
-        flags.Cloud = cloud > tCloud(1) & cloud < tCloud(2); %Partly cloudy
+        flags.Cloud = (cloud > tCloud(1)) & (cloud < tCloud(2)); %Partly cloudy
     else
-        flags.Cloud = false(1,length(cloud));  
+        flags.Cloud = false(1,length(cloud));
     end
     flags.Wind = wind > tWind;
     flags.SZA = sza < tSZA(1) | sza > tSZA(2);
     flags.RelAz = abs(relAz)<tRelAz(1) | abs(relAz)>tRelAz(2);
     flags.QWIP = qwip > tQWIP;
     flags.QA = qa < tQA;
+    waveRange = find(wave >= negRrs(1) & wave <= negRrs(2));
+    flags.negRrs = any(Rrs(:,waveRange) < 0.0,2)';
 
     save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
         "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
 
     %% Apply flags
-    flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP];
+    flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] ...
+        | [flags.negRrs];
 
     %% Write CSV file for awr2env.py
     % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
-    m(:,1) = year(dateTime);
-    m(:,2) = month(dateTime);
-    m(:,3) = day(dateTime);
-    m(:,4) = hour(dateTime);
-    m(:,5) = minute(dateTime);
-    m(:,6) = second(dateTime);
+    % Round to the nearest second
+    dateTime = dateshift(dateTime,'start','minute') + seconds(round(second(dateTime)));
+    YEAR = year(dateTime)';
+    MONTH = month(dateTime)';
+    DAY = day(dateTime)';
+    HOUR = hour(dateTime)';
+    MINUTE = minute(dateTime)';
+    SECOND = round(second(dateTime)');
+
     if validation
         csvOutFile = sprintf('dat/%s_flags.csv',cruise);
-        m(:,7) = 2*int8(~flag); % 0, 1, or 2 for reject, seabass-only, validation
+        FLAG = 2*int8(~flag'); % 0, 1, or 2 for reject, seabass-only, validation
     else
         csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
-        m(:,7) = int8(~flag); % 0, 1, or 2 for reject, seabass-only, validation
+        FLAG = int8(~flag'); % 0, 1, or 2 for reject, seabass-only, validation
     end
-
-    writematrix(m,csvOutFile)
+    T = table(YEAR,MONTH,DAY,HOUR,MINUTE,SECOND,FLAG);
+    writetable(T,csvOutFile)
 else
     load(sprintf('dat/%s_flags.mat',cruise))
     nEns = size(Rrs,1);
@@ -192,20 +203,26 @@ if plotFlags
     flagSpectra(ax4,wave,Lw,flags,0)
     ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
-    th1 = text(0.75,0.9,sprintf('Cloud: %d',sum(flags.Cloud)),'Units','normalized');
-    th2 = text(0.75,0.85,sprintf('Wind: %d',sum(flags.Wind)),'Units','normalized');
-    th3 = text(0.75,0.8,sprintf('SZA: %d',sum(flags.SZA)),'Units','normalized');
-    th4 = text(0.75,0.75,sprintf('RelAz: %d',sum(flags.RelAz)),'Units','normalized');
-    th5 = text(0.75,0.7,sprintf('QWIP: %d',sum(flags.QWIP)),'Units','normalized');
-    th6 = text(0.75,0.65,sprintf('QA: %d',sum(flags.QA)),'Units','normalized','Color','r');
+    th1 = text(0.70,0.9,sprintf('Cloud: %d',sum(flags.Cloud)),'Units','normalized');
+    th2 = text(0.70,0.85,sprintf('Wind: %d',sum(flags.Wind)),'Units','normalized');
+    th3 = text(0.70,0.8,sprintf('SZA: %d',sum(flags.SZA)),'Units','normalized');
+    th4 = text(0.70,0.75,sprintf('RelAz: %d',sum(flags.RelAz)),'Units','normalized');
+    th5 = text(0.70,0.7,sprintf('QWIP: %d',sum(flags.QWIP)),'Units','normalized');
+    th6 = text(0.70,0.65,sprintf('QA: %d',sum(flags.QA)),'Units','normalized');%,'Color','r');
+    th7 = text(0.70,0.60,sprintf('Neg. Rrs: %d',sum(flags.negRrs)),'Units','normalized');
 
     gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
-    th7 = text(0.75,0.6,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
+    th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
+    set([th1 th2 th3 th4 th5 th6 th7 th8],'FontName',fontName,'fontsize',12)
 
     set([ax1 ax2 ax3 ax4],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
     set(fh3,'position',[1926         381        1196         979])
 
-    exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
+    if validation
+        exportgraphics(fh3,sprintf('plt/%s_AllSpec_validation.png',cruise))
+    else
+        exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
+    end
 
     %% Figure timeline Chl, AVW, QWIP, Wei score, ..
     fh4 = figure;
@@ -223,6 +240,10 @@ if plotFlags
     ax2 = subplot(4,1,2);
     yyaxis(ax2,'left')
     ph3 = plot(dateTime,qwip,'marker','.','markersize',18);
+    hold on
+    plot(dateTime([flags.QWIP]),qwip([flags.QWIP]),...
+        'color','k','marker','x','markersize',18,...
+        'linestyle','none');
     ylabel('QWIP')
 
     yyaxis(ax2,'right')
@@ -232,19 +253,35 @@ if plotFlags
     ax3 = subplot(4,1,3);
     yyaxis(ax3,'left')
     ph5 = plot(dateTime,cloud,'marker','.','markersize',18);
+    hold on
+    plot(dateTime([flags.Cloud]),cloud([flags.Cloud]),...
+        'color','k','marker','x','markersize',18,...
+        'linestyle','none');
     ylabel('Cloud [%]')
 
     yyaxis(ax3,'right')
     ph6 = plot(dateTime,wind,'marker','.','markersize',18);
+    hold on
+    plot(dateTime([flags.Wind]),wind([flags.Wind]),...
+        'color','k','marker','x','markersize',18,...
+        'linestyle','none');
     ylabel('Wind [m/s]')
 
     ax4 = subplot(4,1,4);
     yyaxis(ax4,'left')
     ph7 = plot(dateTime,sza,'marker','.','markersize',18);
+    hold on
+    plot(dateTime([flags.SZA]),sza([flags.SZA]),...
+        'color','k','marker','x','markersize',18,...
+        'linestyle','none');
     ylabel('SZA')
 
     yyaxis(ax4,'right')
     ph8 = plot(dateTime,relAz,'marker','.','markersize',18);
+    hold on
+    plot(dateTime([flags.RelAz]),relAz([flags.RelAz]),...
+        'color','k','marker','x','markersize',18,...
+        'linestyle','none');
     ylabel('Relative Azimuth')
 
     set([ax1 ax2 ax3 ax4],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
@@ -306,30 +343,34 @@ if plotFlags
                 break
             end
         end
+
+        flags.Manual = flag';
+        %% Apply flags
+        flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
+            [flags.Manual] | [flags.negRrs];
+
+        %% Write CSV file for awr2env.py
+        % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
+        % Round to the nearest second
+        dateTime = dateshift(dateTime,'start','minute') + seconds(round(second(dateTime)));
+        YEAR = year(dateTime)';
+        MONTH = month(dateTime)';
+        DAY = day(dateTime)';
+        HOUR = hour(dateTime)';
+        MINUTE = minute(dateTime)';
+        SECOND = round(second(dateTime))';
+
+        if validation
+            csvOutFile = sprintf('dat/%s_flags.csv',cruise);
+            FLAG = 2*int8(~flag'); % 0, 1, or 2 for reject, seabass-all, validation
+        else
+            csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
+            FLAG = int8(~flag'); % 0, 1, or 2 for reject, seabass-all, validation
+        end
+
+        T = table(YEAR,MONTH,DAY,HOUR,MINUTE,SECOND,FLAG);
+        writetable(T,csvOutFile)
     end
-    flags.Manual = flag;
-    %% Apply flags
-    flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
-        [flags.Manual];
-
-    %% Write CSV file for awr2env.py
-    % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
-    if validation
-        csvOutFile = sprintf('dat/%s_flags.csv',cruise);
-        m(:,7) = 2*int8(~flag); % 0, 1, or 2 for reject, seabass-all, validation
-    else
-        csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
-        m(:,7) = int8(~flag); % 0, 1, or 2 for reject, seabass-all, validation
-    end
-
-    m(:,1) = year(dateTime);
-    m(:,2) = month(dateTime);
-    m(:,3) = day(dateTime);
-    m(:,4) = hour(dateTime);
-    m(:,5) = minute(dateTime);
-    m(:,6) = second(dateTime);
-
-    writematrix(m,csvOutFile)
 end
 
 save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
@@ -369,13 +410,19 @@ if sum(flags.QA)>0
 else
     ph6 = plot(ax,wave,Var*nan,'b','linewidth',2,'linestyle','--');
 end
+if sum(flags.negRrs)>0
+    ph7 = plot(ax,wave,Var(flags.negRrs,:),'m','linewidth',2,'linestyle','--');
+else
+    ph7 = plot(ax,wave,Var*nan,'m','linewidth',2,'linestyle','--');
+end
 
 
 % These won't concatonate
 % set([ph1 ph2 ph3 ph4 ph5 ph6],'linewidth',2)
 if leg
-    legend([ph1(1) ph2(1)  ph3(1) ph4(1)  ph5(1)  ph6(1)],...
+    legend([ph1(1) ph2(1)  ph3(1) ph4(1)  ph5(1)  ph6(1) ph7(1)],...
         fieldnames(flags))
 end
 
 end
+

@@ -1,70 +1,47 @@
 
 """
-Adapted from bottle2env.pl for Above Water Radiometry (AWR) by D. Aurin 2024-03-29
+Process SeaBASS Above Water Radiometry (AWR) to .env or .env.all
+D. Aurin, NASA/GSFC 2024-04-05
 """
 
-def main():
-
-    import argparse
+def main(dict_args):
     from pathlib import Path
     from datetime import datetime
     from math import isnan
     import re
+    import csv
     from copy import copy
     from collections import OrderedDict
+    import numpy as np
+    import pytz
     from SB_support import readSB#, is_number
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''\
-      This program creates an env.all file(s) for a given SeaBASS data file(s)
-      containing Above Water Radiometry (AWR) and outputting a standard set of
-      headers and fields common to the ENV file format.
-
-      ENV.all files are interim files that are then culled into ENV files which are
-      used to define and load validation matchup targets and data into the SeaBASS
-      matchup work-flow.
-
-      REQUIRED inputs:
-          1) --seabass_file=    a valid SeaBASS file(s) with latitude, longitude, and date-time, and one or more of:
-                                Rrs, Es.
-          2) --flag_file=       a csv file with time, flag (0, 1, 2 for reject, seabass-only, validation)
-          3) --all=             True/[False] (True to write .env.all file including non-validation spectra)
-
-      Outputs:
-          1) an ENV.all file with a reduced set of headers and only: /fields=year,month,day,hour,minute,second,lat,lon,depth,
-             and one or more of: Rrs, Es
-             in the current working directory with a filename of the form: <cruise_name>.awr.<PI_name>.env.all
-
-      Example usage call:
-         awr2env.py --seabass_file filename1.sb [filename2.sb filename3.sb ...]
-      ''',add_help=True)
-
-    parser.add_argument('--seabass_file', nargs='+', type=argparse.FileType('r'), required=True, help='''\
-      REQUIRED: input SeaBASS file(s)
-      Must be a valid SeaBASS file containing Rrs, or Es, and latitude, longitude, and date-time.
-      ''')
-    parser.add_argument('--flag_file', nargs='+', type=argparse.FileType('r'), required=True, help='''\
-      REQUIRED: input flag file
-      Must be a csv file containing date-time and flag.
-      ''')
-    parser.add_argument('--all', nargs='+', type=argparse.FileType('r'), required=True, help='''\
-      REQUIRED: file type designation
-      True for .env.all, False for .env
-      ''')
-
-
-
-    args=parser.parse_args()
-    dict_args=vars(args)
 
     fields_req = ['rrs', 'es']
     fields_opt = ['bincount'] # Need to add in HyperCP. Use Ensemble_N.
     fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
 
-    #loop over input SB files
-    # for fnamein in dict_args['seabass_file']:
+    print(f'Flag file: {dict_args['flag_file']}')
+    print(f'All? {dict_args['all']}')
+
+    timezone = pytz.utc
+    filein_flag = Path(dict_args['flag_file'])
+    if filein_flag.exists():
+        with open(filein_flag, 'r') as csvfile:
+            csvtable = csv.reader(csvfile)
+            data = list(csvtable)
+            data.pop(0)
+        data_array = np.array(data, dtype=np.uint16)
+        flagDatetime = [timezone.localize(datetime(*x)) for x in data_array]
+        flag = data_array[:,6]
+    else:
+        parser.error('ERROR: invalid --flag_file specified; does ' + filein_flag.name + ' exist?')
+
+    nSamples = 0
+    # Loop over input SB files
     for fIndx, fnamein in enumerate(dict_args['seabass_file']):
-        filein_sb = Path(fnamein.name)
+        # filein_sb = Path(fnamein.name) ### __main__ parser gives a different list type here.
+        filein_sb = Path(fnamein)
         print(f'Input SeaBASS file: {filein_sb}')
 
         # read and verify SeaBASS file and required fields
@@ -74,9 +51,8 @@ def main():
                         mask_above_detection_limit=True, \
                         mask_below_detection_limit=True, \
                         no_warn=True)
-
+            nSamples+=ds.length
         else:
-
             parser.error('ERROR: invalid --seabass_file specified; does ' + filein_sb.name + ' exist?')
 
         #check for valid cruise name
@@ -89,6 +65,7 @@ def main():
 
         #check for valid dtimes
         ds.dtime = ds.fd_datetime() # SB_support
+        ds.dtime = [timezone.localize(dt) for dt in ds.dtime]
 
         if not ds.dtime:
             parser.error('ERROR: date-time not parsable in ' + filein_sb.name)
@@ -153,8 +130,10 @@ def main():
             # define output vars
             out_dir = Path('./') # Could change this to be the same folder
 
-            fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env.all'
-            # fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env' # Need to also output the reduced file
+            if dict_args['all'] == True:
+                fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env.all'
+            else:
+                fileout_sb = ds.headers['cruise'].lower() + '.awr.' + ds.pi.lower() + '.env'
 
             lat_lis  = []
             lon_lis  = []
@@ -207,7 +186,6 @@ def main():
                 else:
                     depth = ds.data[depth_field][i] # redefines depth
 
-
             #verify row has valid AWR data
             flag_nodat = 0
 
@@ -218,26 +196,38 @@ def main():
             if flag_nodat == len(fields_fou):
                 continue
 
-            #fill meta-data
-            data_out['dt'].append(ds.dtime[i])
+            # Screen for flagged data
+            # if difference in flagDatetime and ds.dtime[i] is within 10 seconds...
+            dateTimeDiff = [ds.dtime[i] - fDt for fDt in flagDatetime]
+            absDTdiffsec = [abs(x.total_seconds()) for x in dateTimeDiff]
+            if min(absDTdiffsec) < 10:
+                index = absDTdiffsec.index(min(absDTdiffsec))
+                # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
+            else:
+                print(f'No matching time found in flag file: {ds.dtime[i]}')
 
-            data_out['year'].append(ds.dtime[i].strftime('%Y'))
-            data_out['month'].append(ds.dtime[i].strftime('%m'))
-            data_out['day'].append(ds.dtime[i].strftime('%d'))
-            data_out['hour'].append(ds.dtime[i].strftime('%H'))
-            data_out['minute'].append(ds.dtime[i].strftime('%M'))
-            data_out['second'].append(ds.dtime[i].strftime('%S'))
+            if flag[index] != 0:
+                # print(f'Sample flagged as a keeper. flag: {flag[index]}')
+                # Append data
+                data_out['dt'].append(ds.dtime[i])
 
-            lat_lis.append(ds.data['lat'][i])
-            lon_lis.append(ds.data['lon'][i])
+                data_out['year'].append(ds.dtime[i].strftime('%Y'))
+                data_out['month'].append(ds.dtime[i].strftime('%m'))
+                data_out['day'].append(ds.dtime[i].strftime('%d'))
+                data_out['hour'].append(ds.dtime[i].strftime('%H'))
+                data_out['minute'].append(ds.dtime[i].strftime('%M'))
+                data_out['second'].append(ds.dtime[i].strftime('%S'))
 
-            data_out['lat'].append('{:.4f}'.format(ds.data['lat'][i]))
-            data_out['lon'].append('{:.4f}'.format(ds.data['lon'][i]))
+                lat_lis.append(ds.data['lat'][i])
+                lon_lis.append(ds.data['lon'][i])
 
-            data_out[depth_field].append(depth)
+                data_out['lat'].append('{:.4f}'.format(ds.data['lat'][i]))
+                data_out['lon'].append('{:.4f}'.format(ds.data['lon'][i]))
 
-            data_out['associated_files'].append(filein_sb.name)
-            data_out['associated_file_types'].append('env')
+                data_out[depth_field].append(depth)
+
+                data_out['associated_files'].append(filein_sb.name)
+                data_out['associated_file_types'].append('env')
 
             #fill required data into output dict
             for field in fields_fou:
@@ -258,7 +248,8 @@ def main():
             data_out[field] = [x for (y,x) in sorted(zip(data_out['dt'],data_out[field]), key=lambda pair: pair[0])]
 
     # create and fill fileout_sb
-    print('Creating', fileout_sb, 'from:', filein_sb.name)
+    print(f'{len(data_out['dt'])} records retained of {nSamples}')
+    print('Creating', fileout_sb)
 
     with open(out_dir / fileout_sb, 'w') as fout:
 
@@ -266,7 +257,7 @@ def main():
         fout.write('/begin_header\n')
         fout.write('/cruise=' + ds.headers['cruise'].lower() + '\n')
         fout.write('/data_file_name=' + fileout_sb + '\n')
-        fout.write('/data_type=aop\n')
+        fout.write('/data_type=matchup\n')
 
         #output date-time headers
         dt_min = min(data_out['dt'])
@@ -323,7 +314,7 @@ def main():
 
             fout.write(delim.join(row_ls) + '\n')
 
-    return
+    return fileout_sb
 
 def is_number(s):
 
@@ -339,5 +330,46 @@ def is_number(s):
                 return False
             return True
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    import argparse
 
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''\
+        This program creates an env.all file(s) for a given SeaBASS data file(s)
+        containing Above Water Radiometry (AWR) and outputting a standard set of
+        headers and fields common to the ENV file format.
+
+        ENV.all files are interim files that are then culled into ENV files which are
+        used to define and load validation matchup targets and data into the SeaBASS
+        matchup work-flow.
+
+        REQUIRED inputs:
+            1) --seabass_file=    a valid SeaBASS file(s) with latitude, longitude, and date-time, and one or more of:
+                                Rrs, Es.
+            2) --flag_file=       a csv file with time, flag (0, 1, 2 for reject, seabass-only, validation)
+            3) --all=             True/[False] (True to write .env.all file including non-validation spectra)
+
+        Outputs:
+            1) an ENV.all file with a reduced set of headers and only: /fields=year,month,day,hour,minute,second,lat,lon,depth,
+                and one or more of: Rrs, Es
+                in the current working directory with a filename of the form: <cruise_name>.awr.<PI_name>.env.all
+
+        Example usage call:
+            awr2env.py --seabass_file filename1.sb [filename2.sb filename3.sb ...]
+        ''',add_help=True)
+
+    parser.add_argument('--seabass_file', nargs='+', type=argparse.FileType('r'), required=True, help='''\
+        REQUIRED: input SeaBASS file(s)
+        Must be a valid SeaBASS file containing Rrs, or Es, and latitude, longitude, and date-time.
+        ''')
+    parser.add_argument('--flag_file', nargs='+', type=argparse.FileType('r'), required=True, help='''\
+        REQUIRED: input flag file
+        Must be a csv file containing date-time and flag.
+        ''')
+    parser.add_argument('--all', nargs='+', type=argparse.FileType('r'), required=True, help='''\
+        # REQUIRED: file type designation
+        # True for .env.all, False for .env
+        # ''')
+
+    args=parser.parse_args()
+    dict_args=vars(args)
+    main(dict_args)

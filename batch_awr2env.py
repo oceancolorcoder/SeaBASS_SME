@@ -1,27 +1,47 @@
 '''
 SeaBASS_SME tool for converting .sb files to .env files
 using awr2env.py
-2024-03-29 D. Aurin NASA/GSFC
+2024-05-05 D. Aurin NASA/GSFC
 '''
 
 import sys
 import os
+from pathlib import Path
 import glob
-from subprocess import call
-# import awr2env
+import shutil
+import awr2env
 
 cruise='EXPORTSNA_NASA'
-all=True
+
 
 if sys.platform == 'darwin':
     basePath = '/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 else:
     basePath = '/accounts/daurin/Projects/SeaBASS/JIRA_tickets'
 
-inPath = os.path.join(basePath,cruise,'test')
+# inPath = os.path.join(basePath,cruise,'test')
+inPath = os.path.join(basePath,cruise)
 
-type='Es'
-fileList = glob.glob(os.path.join(inPath,f'*{type}*.sb'))
+for all in [True,False]:
+    for type in ['Es','Rrs']:
+        fileList = glob.glob(os.path.join(inPath,f'*{type}_[!STATION]*.sb'))
 
-call(['python','awr2env.py','--seabass_file'] + fileList)
+        # call(['python','awr2env.py','--seabass_file'] + fileList)
+        dict_args={}
+        dict_args['seabass_file'] = fileList
+        if all:
+            dict_args['flag_file'] = f'./dat/{cruise}_all_flags.csv'
+            dict_args['all'] = True
+        else:
+            dict_args['flag_file'] = f'./dat/{cruise}_flags.csv'
+            dict_args['all'] = False
+
+        # Convert cruise to .env or .env.all
+        fileout_env = awr2env.main(dict_args)
+        source = Path('./',fileout_env)
+        dest = Path('./dat/',fileout_env)
+        if source.exists():
+            shutil.move(fileout_env,dest)
+
+
 
