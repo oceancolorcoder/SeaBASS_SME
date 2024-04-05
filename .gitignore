@@ -12,11 +12,10 @@ __pycache__/
 # Backup stores
 ~*
 .DS_Store
+# Matlab backup
+*.asv
 
 *.log
-*.png
-*.asv
-/dat/*.mat
 /plt/*
-*.env
-*.all
+/dat/*
+
