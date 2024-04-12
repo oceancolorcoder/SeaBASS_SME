@@ -12,13 +12,13 @@ wipe
 fontName = machine_prefs;
 
 % Set to true unless building .env.all
-validation = 0;
+validation = 1;
 
-cruise = 'EXPORTSNA_NASA';
-% cruise = 'EXPORTSNA_Boss';
+% cruise = 'EXPORTSNA_NASA';
+cruise = 'EXPORTSNA_Boss';
 
 clobber = 1;
-plotQWIP = 0;
+plotQWIP = 2;
 plotFlags = 1;
 manualSelection = 0;
 

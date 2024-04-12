@@ -22,12 +22,13 @@ def main(dict_args):
     missing = '-9999'
 
     metadata = dict_args['metadata']
-    print(f'Flag file: {dict_args['flag_file']}')
+    print(f'Flag file: {dict_args['flag_file']}') # SeaBASS only or validation
     print(f'Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ')
     if {dict_args['all']}:
         print('NOMAD files')
     else:
         print('VALIDATION files')
+
 
     timezone = pytz.utc
     filein_flag = Path(dict_args['flag_file'])
@@ -94,7 +95,10 @@ def main(dict_args):
 
             #check for required fields
             for field in fields_req:
-                # ma = re.search('^' + field + '$', var)
+                if field == 'rrs':
+                    binFlag = 2**0 + 2**9 + 2**15 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
+                else:
+                    binFlag = 2**0 + 2**9 + 2**14 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
                 ma = re.search('^' + field + '[0-9][0-9][0-9]', var)
 
                 if ma:
@@ -119,17 +123,12 @@ def main(dict_args):
         if not fields_fou:
             parser.error('ERROR: AWR data not found in ' + filein_sb.name)
 
-        # if not depth:
         # if not 'depth' in locals():
         if 'measurement_depth' in ds.headers:
-            # if ds.headers['measurement_depth'] > 0.0:
             header_depth = True
             depth = float(ds.headers['measurement_depth'])
-            # else:
-            #     parser.error('ERROR: valid depth data not found in data matrix nor header in ' + filein_sb.name)
         else:
             depth = 0.0
-            # parser.error('ERROR: depth data not found in data matrix nor header in ' + filein_sb.name)
 
         if fIndx == 0:
             # define output vars
@@ -168,16 +167,20 @@ def main(dict_args):
             data_out['lon'] = []
             unit_out['lon'] = 'degrees'
 
-            # data_out[depth_field] = []
-            # unit_out[depth_field] = ds.variables[depth_field][1]
             data_out['depth'] = []
             unit_out['depth'] = 'm'
+
+            data_out['cloud'] = [] # Only represents cloud reported in field notes
+            unit_out['cloud'] = 'percent'
 
             data_out['associated_files'] = []
             unit_out['associated_files'] = 'none'
 
             data_out['associated_file_types'] = []
             unit_out['associated_file_types'] = 'none'
+
+            data_out['flags'] = []
+            unit_out['flags'] = 'none'
 
         for i in range(ds.length):
             #verify each row of lat, lon
@@ -233,8 +236,17 @@ def main(dict_args):
 
                 data_out[depth_field].append(depth)
 
+                # data_out['cloud'].append('{:.1f}'.format(ds.data['cloud'][i]))
+                if not isnan(ds.data['cloud'][i]):
+                    data_out['cloud'].append(ds.data['cloud'][i])
+
+                else:
+                    data_out['cloud'].append('nan')
+
                 data_out['associated_files'].append(filein_sb.name)
                 data_out['associated_file_types'].append('env')
+
+                data_out['flags'].append(binFlag)
 
             #fill required data into output dict
             for field in fields_fou:
@@ -263,6 +275,9 @@ def main(dict_args):
         #output headers
         fout.write('/begin_header\n')
         fout.write('/cruise=' + ds.headers['cruise'].lower() + '\n')
+        fout.write('/affiliations=' + ds.headers['affiliations'].lower() + '\n')
+        fout.write('/investigators=' + ds.headers['investigators'].lower() + '\n')
+        fout.write('/experiment=' + ds.headers['experiment'].lower() + '\n')
         fout.write('/data_file_name=' + fileout_sb + '\n')
         fout.write('/data_type=matchup\n')
 

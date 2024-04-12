@@ -11,6 +11,7 @@ import glob
 import shutil
 import awr2env
 
+# cruise='EXPORTSNA_Boss'
 cruise='EXPORTSNA_NASA'
 metadata={}
 metadata['dataType']='AOP'
