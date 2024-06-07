@@ -9,7 +9,8 @@ import os
 from pathlib import Path
 import glob
 import shutil
-import awr2env
+import awr2env_hypercp
+import awr2env_seabass
 
 # cruise='EXPORTSNA_Boss'
 # cruise='EXPORTSNA_NASA'
@@ -52,7 +53,11 @@ for all in [True,False]:
             dict_args['all'] = False
 
         # Convert cruise to .env or .env.all
-        fileout_env = awr2env.main(dict_args)
+        if metadata['instrument'].lower() == 'hypercp':
+            # For files with no wavelength column
+            fileout_env = awr2env_hypercp.main(dict_args)
+        else:
+            fileout_env = awr2env_seabass.main(dict_args)
         source = Path('./',fileout_env)
         dest = Path('./dat/',fileout_env)
         if source.exists():
