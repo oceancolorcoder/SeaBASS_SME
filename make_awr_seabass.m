@@ -10,7 +10,8 @@ wipe
 % cruise = 'viirs_2019_foster'; % Use make_database_hypercp.m
 % cruise = 'RSWQ_2023'; % single spectrum per file
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
-cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
+% cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
+cruise = 'UMCES_Missouri_Reservoirs'; % SBA Lorena Silva/Greg Silsbe
 
 [fontName,projPath,imgPath] = machine_prefs();
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
@@ -44,11 +45,13 @@ for i=1:length(fileList{1})
             dBase(i).cloud = extractfield(sbHeader,'cloud_percent');
             dBase(i).wind = extractfield(sbHeader,'wind_speed');
             dBase(i).water_depth = extractfield(sbHeader,'water_depth');
+            dBase(i).wavelength = data.wavelength';
             dBase(i).rrs = data.rrs';
             dBase(i).rrs_sd = data.rrs_sd';
             dBase(i).es = data.ed';
             dBase(i).es_sd = data.ed_sd';
-            dBase(i).wavelength = data.wavelength';
+            dBase(i).lw = data.lw';
+            dBase(i).lw_sd = data.lw_sd';
 
             missing = extractfield(sbHeader,'missing');
 
@@ -81,6 +84,11 @@ for col=1:length(fNames)
         end
     end
 end
+
+% Sort chronologically
+T = struct2table(dBase);
+sortedT = sortrows(T,'datetime');
+dBase = table2struct(sortedT);
 
 save(['dat/' cruise],'dBase')
     

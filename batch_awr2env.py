@@ -12,11 +12,15 @@ import shutil
 import awr2env
 
 # cruise='EXPORTSNA_Boss'
-cruise='EXPORTSNA_NASA'
+# cruise='EXPORTSNA_NASA'
+cruise='UMCES_Missouri_Reservoirs'
+
 metadata={}
 metadata['dataType']='AOP'
-metadata['instrument']='HyperCP'
-metadata['subInstrument']='pySAS'
+# metadata['instrument']='HyperCP'
+metadata['instrument']='TriOS'
+# metadata['subInstrument']='pySAS'
+metadata['subInstrument']='SBA'
 
 
 if sys.platform == 'darwin':
@@ -28,8 +32,13 @@ else:
 inPath = os.path.join(basePath,cruise)
 
 for all in [True,False]:
-    for type in ['Es','Rrs']:
-        fileList = glob.glob(os.path.join(inPath,f'*{type}_[!STATION]*.sb'))
+    # for type in ['Es','Rrs']:
+    for type in ['Rrs']:
+        if metadata['instrument'].lower() == 'hypercp':
+            # STATIONs from HyperCP
+            fileList = glob.glob(os.path.join(inPath,f'*{type}_[!STATION]*.sb'))
+        else:
+            fileList = glob.glob(os.path.join(inPath,f'*{type}_*.sb'))
 
         # call(['python','awr2env.py','--seabass_file'] + fileList)
         dict_args={}

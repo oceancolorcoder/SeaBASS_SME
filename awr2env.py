@@ -5,6 +5,7 @@ D. Aurin, NASA/GSFC 2024-04-05
 """
 
 def main(dict_args):
+    import argparse
     from pathlib import Path
     from datetime import datetime
     from math import isnan
@@ -16,14 +17,15 @@ def main(dict_args):
     import pytz
     from SB_support import readSB#, is_number
 
+    parser = argparse.ArgumentParser()
     fields_req = ['rrs', 'es']
     fields_opt = ['bincount'] # Need to add in HyperCP. Use Ensemble_N.
     fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
 
     metadata = dict_args['metadata']
-    print(f'Flag file: {dict_args['flag_file']}') # SeaBASS only or validation
-    print(f'Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ')
+    print(f"Flag file: {dict_args['flag_file']}") # SeaBASS only or validation
+    print(f"Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ")
     if {dict_args['all']}:
         print('NOMAD files')
     else:
@@ -267,7 +269,7 @@ def main(dict_args):
             data_out[field] = [x for (y,x) in sorted(zip(data_out['dt'],data_out[field]), key=lambda pair: pair[0])]
 
     # create and fill fileout_sb
-    print(f'{len(data_out['dt'])} records retained of {nSamples}')
+    print(f"{len(data_out['dt'])} records retained of {nSamples}")
     print('Creating', fileout_sb)
 
     with open(out_dir / fileout_sb, 'w') as fout:

@@ -8,8 +8,10 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 ####################
 ## Setup
 # NO SPACES in LIS file. LIS files are retained in projDir.
-cruise='EXPORTSNA_NASA'
-iFile=${projDir}'/20240313_NASA_GSFC_EXPORTS_EXPORTSNA_pySAS.lis'
+cruise='UMCES_Missouri_Reservoirs'
+iFile=${projDir}'/20240202_UMCES_Missouri_Reservoirs_RSWQ__MO_RSWQ_2023_AWR.lis'
+# cruise='EXPORTSNA_NASA'
+# iFile=${projDir}'/20240313_NASA_GSFC_EXPORTS_EXPORTSNA_pySAS.lis'
 # cruise='EXPORTSNA_Boss'
 # iFile=${projDir}'/20240112_Boss_EXPORTS_EXPORTSNA_PySAS.lis'
 # cruise='Belgium_2021'
