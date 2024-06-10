@@ -3,7 +3,7 @@
 Process SeaBASS Above Water Radiometry (AWR) to .env or .env.all
 D. Aurin, NASA/GSFC 2024-04-05
 
-This is meant for SeaBASS files with wavelengths in the fields, not as a column.
+This is meant for "tall" SeaBASS files on station with wavelength as a column
 """
 
 def main(dict_args):
@@ -20,8 +20,8 @@ def main(dict_args):
     from SB_support import readSB#, is_number
 
     parser = argparse.ArgumentParser()
-    fields_req = ['rrs', 'es']
-    fields_opt = ['bincount'] # Need to add in HyperCP. Use Ensemble_N.
+    fields_req = ['rrs']
+    fields_opt = ['bincount', 'es', 'ed', 'lw'] 
     fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
 
@@ -47,7 +47,7 @@ def main(dict_args):
     else:
         parser.error('ERROR: invalid --flag_file specified; does ' + filein_flag.name + ' exist?')
 
-    nSamples = 0
+    nSamples = len(dict_args['seabass_file'])
     # Loop over input SB files
     for fIndx, fnamein in enumerate(dict_args['seabass_file']):
         # filein_sb = Path(fnamein.name) ### __main__ parser gives a different list type here.
@@ -61,7 +61,7 @@ def main(dict_args):
                         mask_above_detection_limit=True, \
                         mask_below_detection_limit=True, \
                         no_warn=True)
-            nSamples+=ds.length
+            # nSamples+=ds.length
         else:
             parser.error('ERROR: invalid --seabass_file specified; does ' + filein_sb.name + ' exist?')
 
@@ -80,59 +80,16 @@ def main(dict_args):
         if not ds.dtime:
             parser.error('ERROR: date-time not parsable in ' + filein_sb.name)
 
-        header_depth = False
-        depth_field  = ''
-        fields_fou = []
-
-        for var in ds.variables.keys():
-            #check for depth fields in data matrix
-            for field in fields_dep:
-                ma = re.search('^' + field + '$', var)
-
-                if ma:
-                    depth = copy(missing)
-                    depth_field = field
-
-                else:
-                    depth = 0.0
-                    depth_field = 'depth'
-
-            #check for required fields
-            for field in fields_req:
-                if field == 'rrs':
-                    binFlag = 2**0 + 2**9 + 2**15 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
-                else:
-                    binFlag = 2**0 + 2**9 + 2**14 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
-                ma = re.search('^' + field + '[0-9][0-9][0-9]', var)
-
-                if ma:
-                    # fields_fou.append(field)
-                    fields_fou.append(var)
-
-                #check for error fields
-                for esuf in ds.err_suffixes: # ['_cv', '_sd', '_se', '_bincount']
-                    efield = field + esuf
-                    ma = re.search('^' + efield + '$', var)
-
-                    if ma:
-                        fields_fou.append(efield)
-
-            #check for optional fields
-            for field in fields_opt:
-                ma = re.search('^' + field + '$', var)
-
-                if ma:
-                    fields_fou.append(field)
-
-        if not fields_fou:
-            parser.error('ERROR: AWR data not found in ' + filein_sb.name)
-
-        # if not 'depth' in locals():
         if 'measurement_depth' in ds.headers:
             header_depth = True
             depth = float(ds.headers['measurement_depth'])
         else:
             depth = 0.0
+
+        match = re.search('[DEG]',ds.headers['north_latitude'])
+        lat =float(match.string[0:match.start()-1])         
+        match = re.search('[DEG]',ds.headers['east_longitude'])
+        lon =float(match.string[0:match.start()-1])   
 
         if fIndx == 0:
             # define output vars
@@ -144,9 +101,10 @@ def main(dict_args):
             else:
                 fileout_sb = \
                     f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env"
+            
+            # lat_lis  = []
+            # lon_lis  = []
 
-            lat_lis  = []
-            lon_lis  = []
             unit_out  = OrderedDict()
             data_out = OrderedDict()
 
@@ -175,7 +133,7 @@ def main(dict_args):
             unit_out['depth'] = 'm'
 
             data_out['cloud'] = [] # Only represents cloud reported in field notes
-            unit_out['cloud'] = 'percent'
+            unit_out['cloud'] = '%'
 
             data_out['associated_files'] = []
             unit_out['associated_files'] = 'none'
@@ -185,85 +143,143 @@ def main(dict_args):
 
             data_out['flags'] = []
             unit_out['flags'] = 'none'
+        
+        # Screen for flagged data
+        # if difference in flagDatetime and ds.dtime[i] is within 10 seconds...
+        # For "tall" files, all ds.dtime should be the same.
+        dateTimeDiff = [ds.dtime[0] - fDt for fDt in flagDatetime]
+        absDTdiffsec = [abs(x.total_seconds()) for x in dateTimeDiff]
+        if min(absDTdiffsec) < 10:
+            index = absDTdiffsec.index(min(absDTdiffsec))
+            # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
+        else:
+            print(f'No matching time found in flag file: {ds.dtime[0]}')
 
-        for i in range(ds.length):
-            #verify each row of lat, lon
-            if isnan(float(ds.data['lat'][i])) or \
-                isnan(float(ds.data['lon'][i])):
-                continue
+        if flag[index] != 0:
 
-            #verify each row of depth
-            if not header_depth:
-                if isnan(float(ds.data[depth_field][i])):
-                    continue
+            binFlag = 2**0 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water) None for Lsky/Li/Lw, etc.
 
-                else:
-                    depth = ds.data[depth_field][i] # redefines depth
+            header_depth = False
+            depth_field  = ''
+            fields_fou = []
+
+            for var in ds.variables.keys():    
+                
+                #check for required fields
+                # Set binFlag depending on dataset(s) available
+                ## This will be reset with every file, so they all have to be the same ##
+                if var == 'rrs':
+                    binFlag = binFlag + 2**15 # 15(Rrs)
+                elif var ==  'es' or var == 'ed':
+                    binFlag = binFlag + 2**14 # 14(Es)
+
+                for field in fields_req:
+                    
+                    ma = re.search('^' + field + '$', var)
+
+                    if ma:
+                        # fields_fou.append(field)
+                        fields_fou.append(var)
+
+                    #check for error fields
+                    for esuf in ds.err_suffixes: # ['_cv', '_sd', '_se', '_bincount']
+                        efield = field + esuf
+                        ma = re.search('^' + efield + '$', var)
+
+                        if ma:
+                            fields_fou.append(efield)
+
+                #check for optional fields
+                for field in fields_opt:
+                    ma = re.search('^' + field + '$', var)
+
+                    if ma:
+                        fields_fou.append(field)
+
+                    #check for error fields
+                    for esuf in ds.err_suffixes: # ['_cv', '_sd', '_se', '_bincount']
+                        efield = field + esuf
+                        ma = re.search('^' + efield + '$', var)
+
+                        if ma:
+                            fields_fou.append(efield)
+
+            if not fields_fou:
+                parser.error('ERROR: AWR data not found in ' + filein_sb.name)
+
+            # for i in range(ds.length):                        
 
             #verify row has valid AWR data
             flag_nodat = 0
 
             for field in fields_fou:
-                if isnan(ds.data[field][i]):
-                    flag_nodat = flag_nodat + 1
+                for val in ds.data[field]:
+                    if isnan(val):
+                        flag_nodat = flag_nodat + 1
 
-            if flag_nodat == len(fields_fou):
-                continue
+                if flag_nodat == len(ds.data[field]):
+                    parser.error('ERROR: AWR all nans found in ' + filein_sb.name)
+                
+            # Append data
+            i = 0 # Same across a file
+            data_out['dt'].append(ds.dtime[i])
 
-            # Screen for flagged data
-            # if difference in flagDatetime and ds.dtime[i] is within 10 seconds...
-            dateTimeDiff = [ds.dtime[i] - fDt for fDt in flagDatetime]
-            absDTdiffsec = [abs(x.total_seconds()) for x in dateTimeDiff]
-            if min(absDTdiffsec) < 10:
-                index = absDTdiffsec.index(min(absDTdiffsec))
-                # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
-            else:
-                print(f'No matching time found in flag file: {ds.dtime[i]}')
+            data_out['year'].append(ds.dtime[i].strftime('%Y'))
+            data_out['month'].append(ds.dtime[i].strftime('%m'))
+            data_out['day'].append(ds.dtime[i].strftime('%d'))
+            data_out['hour'].append(ds.dtime[i].strftime('%H'))
+            data_out['minute'].append(ds.dtime[i].strftime('%M'))
+            data_out['second'].append(ds.dtime[i].strftime('%S'))
 
-            if flag[index] != 0:
-                # print(f'Sample flagged as a keeper. flag: {flag[index]}')
-                # Append data
-                data_out['dt'].append(ds.dtime[i])
+            # lat_lis.append(ds.data['lat'][i])
+            # lon_lis.append(ds.data['lon'][i])
 
-                data_out['year'].append(ds.dtime[i].strftime('%Y'))
-                data_out['month'].append(ds.dtime[i].strftime('%m'))
-                data_out['day'].append(ds.dtime[i].strftime('%d'))
-                data_out['hour'].append(ds.dtime[i].strftime('%H'))
-                data_out['minute'].append(ds.dtime[i].strftime('%M'))
-                data_out['second'].append(ds.dtime[i].strftime('%S'))
+            data_out['lat'].append('{:.4f}'.format(lat))
+            data_out['lon'].append('{:.4f}'.format(lon))
 
-                lat_lis.append(ds.data['lat'][i])
-                lon_lis.append(ds.data['lon'][i])
+            data_out['depth'].append(depth)
 
-                data_out['lat'].append('{:.4f}'.format(ds.data['lat'][i]))
-                data_out['lon'].append('{:.4f}'.format(ds.data['lon'][i]))
-
-                data_out[depth_field].append(depth)
-
-                # data_out['cloud'].append('{:.1f}'.format(ds.data['cloud'][i]))
+            if 'cloud' in ds.data.keys():
                 if not isnan(ds.data['cloud'][i]):
                     data_out['cloud'].append(ds.data['cloud'][i])
 
                 else:
                     data_out['cloud'].append('nan')
+            else:
+                    data_out['cloud'].append('nan')
 
-                data_out['associated_files'].append(filein_sb.name)
-                data_out['associated_file_types'].append('env')
+            data_out['associated_files'].append(filein_sb.name)
+            data_out['associated_file_types'].append('env')
 
-                data_out['flags'].append(binFlag)
+            data_out['flags'].append(binFlag)
 
             #fill required data into output dict
+            # Tack on the wavelength to the data_out key, values
+            wavelength = ds.data['wavelength']
+            # Test that subsequent files follow the first file
+            if fIndx == 0:
+                firstWL = wavelength
+            if wavelength != firstWL:
+                parser.error('ERROR: Wavelengths do not match first file in ' + filein_sb.name)
+
             for field in fields_fou:
-                #handle field
-                if not field in data_out:
-                    data_out[field] = []
-                    unit_out[field] = ds.variables[field][-1]
+                for iWv, wv in enumerate(wavelength):
+                    if '_' in field:
+                        [f1,f2] = field.split('_')
+                        fieldXXX = f1 + str(wv) + '_' + f2
 
-                if not isnan(ds.data[field][i]):
-                    data_out[field].append(ds.data[field][i])
+                    else:
+                        fieldXXX = field + str(wv)
 
-                else:
-                    data_out[field].append('nan')
+                    if not fieldXXX in data_out:
+                        data_out[fieldXXX] = []
+                        unit_out[fieldXXX] = ds.variables[field][-1]
+
+                    if not isnan(ds.data[field][iWv]):
+                        data_out[fieldXXX].append(ds.data[field][iWv])
+
+                    else:
+                        data_out[fieldXXX].append('nan')
 
     #sort data_out by dtime
     for field in data_out:
@@ -297,13 +313,15 @@ def main(dict_args):
         data_out.pop('dt', None)
 
         #output lat/lon headers
-        lat_min = min(lat_lis)
-        lat_max = max(lat_lis)
+        lat_all = [float(lati) for lati in data_out['lat']]
+        lat_min = min(lat_all)
+        lat_max = max(lat_all)
         fout.write('/north_latitude={:.3f}[DEG]\n'.format(lat_max))
         fout.write('/south_latitude={:.3f}[DEG]\n'.format(lat_min))
 
-        lon_min = min(lon_lis)
-        lon_max = max(lon_lis)
+        lon_all = [float(loni) for loni in data_out['lon']]
+        lon_min = min(lon_all)
+        lon_max = max(lon_all)
         fout.write('/east_longitude={:.3f}[DEG]\n'.format(lon_max))
         fout.write('/west_longitude={:.3f}[DEG]\n'.format(lon_min))
 
@@ -360,7 +378,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''\
-        This program creates an env.all file(s) for a given SeaBASS data file(s)
+        This program creates .env or env.all file(s) for a given SeaBASS data file(s)
         containing Above Water Radiometry (AWR) and outputting a standard set of
         headers and fields common to the ENV file format.
 

@@ -3,13 +3,7 @@
 Process SeaBASS Above Water Radiometry (AWR) to .env or .env.all
 D. Aurin, NASA/GSFC 2024-04-05
 
-This is meant for SeaBASS files on station with wavelength as a column
-
-
-
-
-This needs a total overhaul. With only one station, it is either accepted or rejected and the whole 
-thing can be output to a .env file or not. No row-by-row evaluation needed. Check 
+This is meant for "wide" SeaBASS files with wavelengths in the fields, not as a column.
 """
 
 def main(dict_args):
@@ -90,14 +84,25 @@ def main(dict_args):
         depth_field  = ''
         fields_fou = []
 
-        for var in ds.variables.keys():           
+        for var in ds.variables.keys():
+            #check for depth fields in data matrix
+            for field in fields_dep:
+                ma = re.search('^' + field + '$', var)
+
+                if ma:
+                    depth = copy(missing)
+                    depth_field = field
+
+                else:
+                    depth = 0.0
+                    depth_field = 'depth'
 
             #check for required fields
             for field in fields_req:
                 if field == 'rrs':
-                    binFlag = 2**0 + 2**15 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
-                elif field ==  'es':
-                    binFlag = 2**0 + 2**14 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
+                    binFlag = 2**0 + 2**9 + 2**15 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
+                else:
+                    binFlag = 2**0 + 2**9 + 2**14 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water)
                 ma = re.search('^' + field + '[0-9][0-9][0-9]', var)
 
                 if ma:
@@ -121,17 +126,13 @@ def main(dict_args):
 
         if not fields_fou:
             parser.error('ERROR: AWR data not found in ' + filein_sb.name)
-        
+
+        # if not 'depth' in locals():
         if 'measurement_depth' in ds.headers:
             header_depth = True
             depth = float(ds.headers['measurement_depth'])
         else:
             depth = 0.0
-
-        match = re.search('[DEG]',ds.headers['north_latitude'])
-        lat =float(match.string[0:match.start()-1])         
-        match = re.search('[DEG]',ds.headers['east_longitude'])
-        lon =float(match.string[0:match.start()-1])         
 
         if fIndx == 0:
             # define output vars
@@ -143,7 +144,9 @@ def main(dict_args):
             else:
                 fileout_sb = \
                     f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env"
-            
+
+            lat_lis  = []
+            lon_lis  = []
             unit_out  = OrderedDict()
             data_out = OrderedDict()
 
@@ -183,7 +186,19 @@ def main(dict_args):
             data_out['flags'] = []
             unit_out['flags'] = 'none'
 
-        for i in range(ds.length):                        
+        for i in range(ds.length):
+            #verify each row of lat, lon
+            if isnan(float(ds.data['lat'][i])) or \
+                isnan(float(ds.data['lon'][i])):
+                continue
+
+            #verify each row of depth
+            if not header_depth:
+                if isnan(float(ds.data[depth_field][i])):
+                    continue
+
+                else:
+                    depth = ds.data[depth_field][i] # redefines depth
 
             #verify row has valid AWR data
             flag_nodat = 0
@@ -217,20 +232,20 @@ def main(dict_args):
                 data_out['minute'].append(ds.dtime[i].strftime('%M'))
                 data_out['second'].append(ds.dtime[i].strftime('%S'))
 
-                # lat_lis.append(ds.data['lat'][i])
-                # lon_lis.append(ds.data['lon'][i])
+                lat_lis.append(ds.data['lat'][i])
+                lon_lis.append(ds.data['lon'][i])
 
-                data_out['lat'].append('{:.4f}'.format(lat))
-                data_out['lon'].append('{:.4f}'.format(lon))
+                data_out['lat'].append('{:.4f}'.format(ds.data['lat'][i]))
+                data_out['lon'].append('{:.4f}'.format(ds.data['lon'][i]))
 
-                data_out['depth'].append(depth)
+                data_out[depth_field].append(depth)
 
-                # # data_out['cloud'].append('{:.1f}'.format(ds.data['cloud'][i]))
-                # if not isnan(ds.data['cloud'][i]):
-                #     data_out['cloud'].append(ds.data['cloud'][i])
+                # data_out['cloud'].append('{:.1f}'.format(ds.data['cloud'][i]))
+                if not isnan(ds.data['cloud'][i]):
+                    data_out['cloud'].append(ds.data['cloud'][i])
 
-                # else:
-                #     data_out['cloud'].append('nan')
+                else:
+                    data_out['cloud'].append('nan')
 
                 data_out['associated_files'].append(filein_sb.name)
                 data_out['associated_file_types'].append('env')
@@ -345,7 +360,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''\
-        This program creates an env.all file(s) for a given SeaBASS data file(s)
+        This program creates .env or env.all file(s) for a given SeaBASS data file(s)
         containing Above Water Radiometry (AWR) and outputting a standard set of
         headers and fields common to the ENV file format.
 
