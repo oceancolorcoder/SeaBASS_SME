@@ -11,8 +11,8 @@
 wipe
 fontName = machine_prefs;
 
-% Set to true unless building .env.all
-validation = 0;
+% Set to true unless building .env.all for NOMAD/SeaBASS
+validation = 1;
 
 cruise = 'UMCES_Missouri_Reservoirs';
 SBA = 1;
@@ -139,6 +139,8 @@ if clobber
     waveRange = find(wave >= negRrs(1) & wave <= negRrs(2));
     flags.negRrs = any(Rrs(:,waveRange) < 0.0,2)';
 
+    flags.Manual = 0*flags.negRrs;
+
     if ~SBA
         save(sprintf('dat/%s_flags.mat',cruise),"dateTime","wave","Rrs","Es","Li","Lw",...
             "chl","avw","qwip","qa","cloud","wind","sza","relAz","flags")
@@ -186,31 +188,31 @@ end
 %% Show spectra with filtered data
 if plotFlags
     fh3 = figure;
-    th1 = tiledlayout(2,2);
-    ax1 = nexttile;
+    tile1 = tiledlayout(2,2);
+    ax11 = nexttile;
     plot(wave,Rrs,'k')
     hold on
-    flagSpectra(ax1,wave,Rrs,flags,1)
+    flagSpectra(ax11,wave,Rrs,flags,1)
     ylabel('R_{rs} [sr^{-1}]')
 
-    ax2 = nexttile;
+    ax12 = nexttile;
     plot(wave,Es,'k')
     hold on
-    flagSpectra(ax2,wave,Es,flags,0)
+    flagSpectra(ax12,wave,Es,flags,0)
     ylabel('E_s [\muW cm^{-2} nm^{-1}]')
 
     if ~SBA
-        ax3 = nexttile;
+        ax13 = nexttile;
         plot(wave,Li,'k')
         hold on
-        flagSpectra(ax3,wave,Li,flags,0)
+        flagSpectra(ax13,wave,Li,flags,0)
         ylabel('L_i [\muW cm^{-2} nm^{-1} sr^{-1}]')
     end
 
-    ax4 = nexttile;
+    ax14 = nexttile;
     plot(wave,Lw,'k')
     hold on
-    flagSpectra(ax4,wave,Lw,flags,0)
+    flagSpectra(ax14,wave,Lw,flags,0)
     ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
     if all(isnan(cloud))
@@ -235,36 +237,36 @@ if plotFlags
         gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
         th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
         set([th1 th2 th3 th4 th5 th6 th7 th8],'FontName',fontName,'fontsize',12)
-        set([ax1 ax2 ax3 ax4],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+        set([ax11 ax12 ax13 ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
     else
         gud = ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
         th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),nEns),'Units','normalized');
         set([th1 th2 th3 th5 th6 th7 th8],'FontName',fontName,'fontsize',12)
-        set([ax1 ax2 ax4],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+        set([ax11 ax12 ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
     end
     set(fh3,'position',[1926         381        1196         979])
 
     if validation
-        exportgraphics(fh3,sprintf('plt/%s_AllSpec_validation.png',cruise))
+        exportgraphics(fh3,sprintf('plt/%s_spec.png',cruise))
     else
-        exportgraphics(fh3,sprintf('plt/%s_AllSpec.png',cruise))
+        exportgraphics(fh3,sprintf('plt/%s_all_spec.png',cruise))
     end
 
     %% Figure timeline Chl, AVW, QWIP, Wei score, ..
     fh4 = figure;
     set(fh4,'Position',[200 200 850 950])
-    ax1 = subplot(4,1,1);
+    ax21 = subplot(4,1,1);
     title(strrep(cruise,'_','-'))
-    yyaxis(ax1,'left')
+    yyaxis(ax21,'left')
     ph1 = plot(dateTime,chl,'marker','.','markersize',18);
     ylabel('chlor_a')
 
-    yyaxis(ax1,'right')
+    yyaxis(ax21,'right')
     ph2 = plot(dateTime,avw,'marker','.','markersize',18);
     ylabel('AVW [nm]')
 
-    ax2 = subplot(4,1,2);
-    yyaxis(ax2,'left')
+    ax12 = subplot(4,1,2);
+    yyaxis(ax12,'left')
     ph3 = plot(dateTime,qwip,'marker','.','markersize',18);
     hold on
     plot(dateTime([flags.QWIP]),qwip([flags.QWIP]),...
@@ -272,12 +274,12 @@ if plotFlags
         'linestyle','none');
     ylabel('QWIP')
 
-    yyaxis(ax2,'right')
+    yyaxis(ax12,'right')
     ph4 = plot(dateTime,qa,'marker','.','markersize',18);
     ylabel('QA_score')
 
-    ax3 = subplot(4,1,3);
-    yyaxis(ax3,'left')
+    ax23 = subplot(4,1,3);
+    yyaxis(ax23,'left')
     ph5 = plot(dateTime,cloud,'marker','.','markersize',18);
     hold on
     plot(dateTime([flags.Cloud]),cloud([flags.Cloud]),...
@@ -285,7 +287,7 @@ if plotFlags
         'linestyle','none');
     ylabel('Cloud [%]')
 
-    yyaxis(ax3,'right')
+    yyaxis(ax23,'right')
     ph6 = plot(dateTime,wind,'marker','.','markersize',18);
     hold on
     plot(dateTime([flags.Wind]),wind([flags.Wind]),...
@@ -293,8 +295,8 @@ if plotFlags
         'linestyle','none');
     ylabel('Wind [m/s]')
 
-    ax4 = subplot(4,1,4);
-    yyaxis(ax4,'left')
+    ax24 = subplot(4,1,4);
+    yyaxis(ax24,'left')
     ph7 = plot(dateTime,sza,'marker','.','markersize',18);
     hold on
     plot(dateTime([flags.SZA]),sza([flags.SZA]),...
@@ -303,7 +305,7 @@ if plotFlags
     ylabel('SZA')
 
     if ~SBA
-        yyaxis(ax4,'right')
+        yyaxis(ax24,'right')
         ph8 = plot(dateTime,relAz,'marker','.','markersize',18);
         hold on
         plot(dateTime([flags.RelAz]),relAz([flags.RelAz]),...
@@ -312,7 +314,7 @@ if plotFlags
         ylabel('Relative Azimuth')
     end
 
-    set([ax1 ax2 ax3 ax4],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
+    set([ax21 ax12 ax23 ax24],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
     if validation
         exportgraphics(fh4,sprintf('plt/%s_timeline.png',cruise))
     else
@@ -322,8 +324,14 @@ if plotFlags
 
     %% Manual screening of spectra
     if manualSelection
+        if validation
+            fprintf('Screen for validation\n')
+        else
+            fprintf('Screen for NOMAD\n')
+        end
+
         input('Continue now? (enter)');
-        close all
+        % close all
         fh5 = figure;
         set(fh5,'position',[1926         381        1196         979])
         ah1 = axes;
@@ -364,7 +372,7 @@ if plotFlags
                 [rrs,Rindex] = find_nearest(y,RrsX);
                 plot(wave,Rrs(Rindex,:),'k','LineWidth',3)
                 flag(Rindex) = 1;
-                fprintf('Index: %d\n',Rindex)
+                fprintf('Index of selected spectrum: %d\n',Rindex)
                 disp(flag(Rindex))
                 % disp([x,y])
                 % continue
@@ -374,18 +382,35 @@ if plotFlags
         end
 
         if size(flag,1)~=1
-            flags.Manual = flag';
+            flags.Manual = logical(flag');
         else
-            flags.Manual = flag;
+            flags.Manual = logical(flag);
         end
         %% Apply flags
         if ~SBA
             flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
                 [flags.Manual] | [flags.negRrs];
+            set(th8,'String',sprintf('Remaining: %d of %d',sum(~flag),nEns));
         else
             flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] |  [flags.QWIP] |...
             [flags.Manual] | [flags.negRrs];
+            set(th8,'String',sprintf('Remaining: %d of %d',sum(~flag),nEns));
         end
+
+        flagSpectra(ax11,wave,Rrs,flags,1)
+        flagSpectra(ax12,wave,Es,flags,0)
+        if ~SBA
+            flagSpectra(ax13,wave,Li,flags,0)
+        end
+        flagSpectra(ax14,wave,Lw,flags,0)
+
+        if validation
+            exportgraphics(fh3,sprintf('plt/%s_spec.png',cruise))
+        else
+            exportgraphics(fh3,sprintf('plt/%s_all_spec.png',cruise))
+        end
+        
+
 
         %% Write CSV file for awr2env.py
         % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
@@ -452,23 +477,34 @@ if sum(flags.QWIP)>0
 else
     ph5 = plot(ax,wave,Var*nan,'m','linewidth',2);
 end
-if sum(flags.QA)>0
-    ph6 = plot(ax,wave,Var(flags.QA,:),'b','linewidth',2,'linestyle','--');
-else
-    ph6 = plot(ax,wave,Var*nan,'b','linewidth',2,'linestyle','--');
-end
+% if sum(flags.QA)>0
+%     ph6 = plot(ax,wave,Var(flags.QA,:),'b','linewidth',2,'linestyle','--');
+% else
+%     ph6 = plot(ax,wave,Var*nan,'b','linewidth',2,'linestyle','--');
+% end
 if sum(flags.negRrs)>0
-    ph7 = plot(ax,wave,Var(flags.negRrs,:),'m','linewidth',2,'linestyle','--');
+    ph7 = plot(ax,wave,Var(flags.negRrs,:),'color','b','linewidth',2,'linestyle','--');
 else
-    ph7 = plot(ax,wave,Var*nan,'m','linewidth',2,'linestyle','--');
+    ph7 = plot(ax,wave,Var*nan,'color','b','linewidth',2,'linestyle','--');
+end
+if sum(flags.Manual)>0
+    ph8 = plot(ax,wave,Var(flags.Manual,:),'color','m','linewidth',2,'linestyle','--');
+else
+    ph8 = plot(ax,wave,Var*nan,'color','m','linewidth',2,'linestyle','--');
 end
 
 
 % These won't concatonate
 % set([ph1 ph2 ph3 ph4 ph5 ph6],'linewidth',2)
 if leg
-    legend([ph1(1) ph2(1)  ph3(1) ph4(1)  ph5(1)  ph6(1) ph7(1)],...
-        fieldnames(flags))
+    legNames = fieldnames(flags);
+    if sum(contains(fieldnames(flags),'RelAz')) > 0        
+        legend([ph1(1) ph2(1)  ph3(1) ph4(1)  ph5(1)  ph7(1) ph8(1)],...
+            legNames([1:5 7 8]))
+    else
+        legend([ph1(1) ph2(1)  ph3(1) ph5(1)  ph7(1) ph8(1)],...
+            legNames([1:4 6 7]))
+    end
 end
 
 end
