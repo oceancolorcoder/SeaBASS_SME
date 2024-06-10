@@ -265,8 +265,8 @@ if plotFlags
     ph2 = plot(dateTime,avw,'marker','.','markersize',18);
     ylabel('AVW [nm]')
 
-    ax12 = subplot(4,1,2);
-    yyaxis(ax12,'left')
+    ax22 = subplot(4,1,2);
+    yyaxis(ax22,'left')
     ph3 = plot(dateTime,qwip,'marker','.','markersize',18);
     hold on
     plot(dateTime([flags.QWIP]),qwip([flags.QWIP]),...
@@ -274,7 +274,7 @@ if plotFlags
         'linestyle','none');
     ylabel('QWIP')
 
-    yyaxis(ax12,'right')
+    yyaxis(ax22,'right')
     ph4 = plot(dateTime,qa,'marker','.','markersize',18);
     ylabel('QA_score')
 
@@ -314,7 +314,7 @@ if plotFlags
         ylabel('Relative Azimuth')
     end
 
-    set([ax21 ax12 ax23 ax24],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
+    set([ax21 ax22 ax23 ax24],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
     if validation
         exportgraphics(fh4,sprintf('plt/%s_timeline.png',cruise))
     else
