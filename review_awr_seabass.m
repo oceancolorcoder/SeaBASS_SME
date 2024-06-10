@@ -12,7 +12,7 @@ wipe
 fontName = machine_prefs;
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-validation = 1;
+validation = 0;
 
 cruise = 'UMCES_Missouri_Reservoirs';
 SBA = 1;
@@ -20,7 +20,7 @@ SBA = 1;
 clobber = 1;
 plotQWIP = 0;
 plotFlags = 1;
-manualSelection = 1;
+manualSelection = 0;
 
 negRrs = [380 680]; % Spectral range of negatives to eliminate from all sets
 tRelAz = [87 138]; % M99, Z17, IOCCG
@@ -52,6 +52,23 @@ if clobber
             % Have not encountered this yet
             Li = vertcat(dBase.li);            
         end
+        if sum(contains(fieldnames(dBase),'rrs_sd')) > 0
+            Rrs_sd = vertcat(dBase.rrs_sd);
+            % Reduce resolution for clarity
+            % wave_sd = repmat(min(wave):10:max(wave),size(Rrs_sd,1),1);
+            wave_sd = min(wave):10:max(wave);
+            Rrs_sub = interp1(wave,Rrs',wave_sd)';
+            Rrs_sd = interp1(wave,Rrs_sd',wave_sd)';
+        end
+        if sum(contains(fieldnames(dBase),'rrs_unc')) > 0
+            % Note we are re-using _sd in the variable for uncertainty
+            % (just for plots)
+            Rrs_sd = vertcat(dBase.rrs_unc);
+            wave_sd = min(wave):10:max(wave);
+            Rrs_sub = interp1(wave,Rrs',wave_sd)';
+            Rrs_sd = interp1(wave,Rrs_sd',wave_sd)';
+        end
+
     catch
         disp('Wavelength cannot be concatonated. Interpolating to shorter wave range')
         % Cross this bridge when/if it arises
@@ -192,6 +209,10 @@ if plotFlags
     ax11 = nexttile;
     plot(wave,Rrs,'k')
     hold on
+    if exist('Rrs_sd','var')
+        errorbar(wave_sd,Rrs_sub,Rrs_sd,'color','k')
+    end
+
     flagSpectra(ax11,wave,Rrs,flags,1)
     ylabel('R_{rs} [sr^{-1}]')
 
