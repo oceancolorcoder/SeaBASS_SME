@@ -145,110 +145,16 @@ end
 if plotTimelineSpectra
     handles = plotFlags(AWR,ancillary,flags);
 
-
+    handles.fh5 = figure('position',[1926         381        1196         979]);
+    handles.ah1 = axes;
+    plot(AWR.wave,AWR.Rrs,'k')
+    hold on
+    grid on
+    flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
+    ylabel('R_{rs} [sr^{-1}]')
     %% Manual screening of spectra
     if manualSelection
-        if ancillary.validation
-            fprintf('Screen for validation\n')
-        else
-            fprintf('Screen for NOMAD\n')
-        end
-
-        input('Continue now? (enter)');
-        % close all
-        fh5 = figure;
-        set(fh5,'position',[1926         381        1196         979])
-        ah1 = axes;
-        plot(AWR.wave,AWR.Rrs,'k')
-        hold on
-        flagSpectra(ah1,AWR.wave,AWR.Rrs,flags,0)
-        ylabel('R_{rs} [sr^{-1}]')
-
-        disp('Manual Screening')
-        disp('Zoom to spectrum of interest and hit Continue')
-        disp('Left mouse to flag spectrum. Continue to save and move on. Try again to ignore last.')
-        disp('Middle mouse to exit and save.')
-        flag = zeros(1,AWR.nSpectra);
-        for tries=1:10
-            h1 = uicontrol(fh5,'Style', 'pushbutton', 'String', 'Continue',...
-                'Position', [5 100 50 25], 'Callback', 'uiresume');
-            uicontrol(h1)
-            uiwait(fh5)
-
-            [x,y] = ginput(1);
-
-            plot(x,y,'k*')
-            h2 = uicontrol('Style', 'pushbutton', 'String', 'Continue',...
-                'Position', [5 100 50 25], 'Callback', 'butt=1; uiresume');
-            h3 = uicontrol('Style', 'pushbutton', 'String', 'Try Again',...
-                'Position', [5 50 50 25], 'Callback','butt=0; uiresume');
-            h4 = uicontrol('Style', 'pushbutton', 'String', 'Exit',...
-                'Position', [5 5 50 25], 'Callback','butt=3; uiresume');
-            uicontrol(h2)
-            uicontrol(h3)
-            uicontrol(h4)
-            uiwait
-            if butt == 0
-                continue
-            elseif butt == 1
-                [wv,windex] = find_nearest(x,AWR.wave);
-                RrsX = AWR.Rrs(:,windex);
-                [rrs,Rindex] = find_nearest(y,RrsX);
-                plot(AWR.wave,AWR.Rrs(Rindex,:),'k','LineWidth',3)
-                flag(Rindex) = 1;
-                fprintf('Index of selected spectrum: %d\n',Rindex)
-                disp(flag(Rindex))
-                % disp([x,y])
-                % continue
-            elseif butt == 3
-                break
-            end
-        end
-
-        if size(flag,1)~=1
-            flags.Manual = logical(flag');
-        else
-            flags.Manual = logical(flag);
-        end
-        %% Apply flags
-        if ~ancillary.SBA
-            flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
-                [flags.Manual] | [flags.negRrs];
-            set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
-        else
-            flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] |  [flags.QWIP] |...
-            [flags.Manual] | [flags.negRrs];
-            set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
-        end
-
-        flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
-        flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
-        if ~ancillary.SBA
-            flagSpectra(ax13,AWR.wave,AWR.Li,flags,0)
-        end
-        flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
-
-        if ancillary.validation
-            exportgraphics(handles.fh3,sprintf('plt/%s_spec.png',ancillary.cruise))
-        else
-            exportgraphics(handles.fh3,sprintf('plt/%s_all_spec.png',ancillary.cruise))
-        end
-                
-        %% Write CSV file for awr2env.py
-        % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
-        % Round to the nearest second
-        dateTime = dateshift(AWR.dateTime,'start','minute') + seconds(round(second(AWR.dateTime)));
-        [Yr,Mon,Day,Hr,Min,Sec] = datevec(dateTime');
-
-        if ancillary.validation
-            csvOutFile = sprintf('dat/%s_flags.csv',ancillary.cruise);
-            FLAG = 2*int8(~flag'); % 0, 1, or 2 for reject, seabass-only, validation
-        else
-            csvOutFile = sprintf('dat/%s_all_flags.csv',ancillary.cruise);
-            FLAG = int8(~flag'); % 0, 1, or 2 for reject, seabass-only, validation
-        end
-        T = table(Yr,Mon,Day,Hr,Min,Sec,FLAG);
-        writetable(T,csvOutFile)
+        manualFlag(ancillary,handles,AWR,flags)
     end
 end
 
