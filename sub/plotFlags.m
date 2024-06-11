@@ -56,7 +56,7 @@ if ~ancillary.SBA
     gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');
     set([th1 th2 th3 th4 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
-    set([ax11 ax12 ax13 ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+    set([handles.ax11 handles.ax12 handles.ax13 handles.ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
 else
     gud = ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');

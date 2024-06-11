@@ -152,6 +152,7 @@ if plotTimelineSpectra
     grid on
     flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
     ylabel('R_{rs} [sr^{-1}]')
+    
     %% Manual screening of spectra
     if manualSelection
         manualFlag(ancillary,handles,AWR,flags)

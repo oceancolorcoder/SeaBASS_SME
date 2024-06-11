@@ -85,7 +85,7 @@ end
 flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
 flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
 if ~ancillary.SBA
-    flagSpectra(ax13,AWR.wave,AWR.Li,flags,0)
+    flagSpectra(handles.ax13,AWR.wave,AWR.Li,flags,0)
 end
 flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
 

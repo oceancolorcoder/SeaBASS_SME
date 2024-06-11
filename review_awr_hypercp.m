@@ -15,6 +15,7 @@ ancillary.validation = 1;
 
 % ancillary.cruise = 'EXPORTSNA_NASA';
 ancillary.cruise = 'EXPORTSNA_Boss';
+ancillary.SBA = 0;
 
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 0;   % Plot QWIP (x2)
@@ -38,7 +39,7 @@ end
 
 %% Load and overview
 if clobber
-    load(sprintf('dat/%s.mat',cruise)) % SASData from make_database_hypercp.m
+    load(sprintf('dat/%s.mat',ancillary.cruise)) % SASData from make_database_hypercp.m
     AWR.dateTime = datetime([SASData.Ancillary.datenum],'ConvertFrom','datenum','TimeZone','UTC');
     AWR.nSpectra = size([SASData.Ancillary.datenum],2);
 
@@ -54,29 +55,29 @@ if clobber
         % In this case, interpolation of data to the shorter wavelength vector
         % will be required
         % There has to be a better way...
-        for i=nSpectra:-1:1
+        for i=AWR.nSpectra:-1:1
             nBands(i) = length(SASData.Reflectance(i).Rrs_HYPER_wavelength);
         end
         iShort = find(nBands == min(nBands)); iShort = iShort(1);
         AWR.wave = SASData.Reflectance(iShort).Rrs_HYPER_wavelength;
-        for i=nSpectra:-1:1
-            Rrs(i,:) = interp1(SASData.Reflectance(i).Rrs_HYPER_wavelength, ...
+        for i=AWR.nSpectra:-1:1
+            AWR.Rrs(i,:) = interp1(SASData.Reflectance(i).Rrs_HYPER_wavelength, ...
                 SASData.Reflectance(i).Rrs_HYPER, AWR.wave);
-            Es(i,:) = interp1(SASData.Irradiance(i).ES_HYPER_wavelength, ...
+            AWR.Es(i,:) = interp1(SASData.Irradiance(i).ES_HYPER_wavelength, ...
                 SASData.Irradiance(i).ES_HYPER, AWR.wave);
-            Li(i,:) = interp1(SASData.Radiance(i).LI_HYPER_wavelength, ...
+            AWR.Li(i,:) = interp1(SASData.Radiance(i).LI_HYPER_wavelength, ...
                 SASData.Radiance(i).LI_HYPER, AWR.wave);
-            Lw(i,:) = interp1(SASData.Radiance(i).LW_HYPER_wavelength, ...
+            AWR.Lw(i,:) = interp1(SASData.Radiance(i).LW_HYPER_wavelength, ...
                 SASData.Radiance(i).LW_HYPER, AWR.wave);
         end
     end
     %% Apply the QWIP and AVW, regardless of whether they are provided
-    [ancillary.qwip,QCI,ancillary.avw] = AVW_QWIP_2D_fun(Rrs,AWR.wave,'none','none');
+    [ancillary.qwip,QCI,ancillary.avw] = AVW_QWIP_2D_fun(AWR.Rrs,AWR.wave,'none','none');
     if plotQWIP
         minMaxPlot = [440 590];
-        fh12 = QWIP_figure_fun(Rrs,AWR.wave,ancillary.avw,cruise,minMaxPlot);
-        exportgraphics(fh12(1),sprintf('plt/%s_QWIP.png',cruise))
-        exportgraphics(fh12(2),sprintf('plt/%s_QWIP_Hist.png',cruise))
+        fh12 = QWIP_figure_fun(AWR.Rrs,AWR.wave,ancillary.avw,ancillary.cruise,minMaxPlot);
+        exportgraphics(fh12(1),sprintf('plt/%s_QWIP.png',ancillary.cruise))
+        exportgraphics(fh12(2),sprintf('plt/%s_QWIP_Hist.png',ancillary.cruise))
     end
 
     %% Populate threshold variables
@@ -108,16 +109,16 @@ if clobber
         % Fix bad interpolation in EXPORTSNA Ancillary file
         ancillary.cloud(ancillary.cloud<0) = missing;
     else
-        ancillary.cloud = nan(1,nSpectra);
+        ancillary.cloud = nan(1,AWR.nSpectra);
     end
     % Fill in with cloud index where empty
     whrNaN = isnan(ancillary.cloud)';
     [wv,iwv] = find_nearest(750,AWR.wave);
-    li750 = Li(:,iwv);
-    es750 = Es(:,iwv);
-    ancillary.cloud(whrNaN & (li750./es750 < cloudIndexes(1))) = 0; % Clear
-    ancillary.cloud(whrNaN & ( li750./es750 >= cloudIndexes(1)) & li750./es750 < cloudIndexes(2) ) = 50; % Partly cloudy
-    ancillary.cloud(whrNaN & (li750./es750 > cloudIndexes(2))) = 100; % Fully overcast (no good for validation, but okay for AWR)
+    li750 = AWR.Li(:,iwv);
+    es750 = AWR.Es(:,iwv);
+    ancillary.cloud(whrNaN & (li750./es750 < thresholds.cloudIndexes(1))) = 0; % Clear
+    ancillary.cloud(whrNaN & ( li750./es750 >= thresholds.cloudIndexes(1)) & li750./es750 < thresholds.cloudIndexes(2) ) = 50; % Partly cloudy
+    ancillary.cloud(whrNaN & (li750./es750 > thresholds.cloudIndexes(2))) = 100; % Fully overcast (no good for validation, but okay for AWR)
 
     if sum(contains(fieldnames(SASData.Ancillary),'WINDSPEED')) > 0
         ancillary.wind = [SASData.Ancillary.WINDSPEED];
@@ -131,92 +132,25 @@ if clobber
 
     flags = writeFlags(ancillary,thresholds, AWR);
 else
-    load(sprintf('dat/%s_flags.mat',cruise))
-    nSpectra = size(Rrs,1);
+    load(sprintf('dat/%s_flags.mat',ancillary.cruise))
+    AWR.nSpectra = size(AWR.Rrs,1);
 end
 
 %% Show spectra with filtered data
 if plotTimelineSpectra
     handles = plotFlags(AWR,ancillary,flags);    
 
+    handles.fh5 = figure('position',[1926         381        1196         979]);
+    handles.ah1 = axes;
+    plot(AWR.wave,AWR.Rrs,'k')
+    hold on
+    grid on
+    flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
+    ylabel('R_{rs} [sr^{-1}]')
+
     %% Manual screening of spectra
     if manualSelection
-        input('Continue now? (enter)');
-        close all
-        fh5 = figure;
-        set(fh5,'position',[1926         381        1196         979])
-        plot(wave,Rrs,'k')
-        hold on
-        flagSpectra(ax1,wave,Rrs,flags,0)
-        ylabel('R_{rs} [sr^{-1}]')
-
-        disp('Manual Screening')
-        disp('Zoom to spectrum of interest and hit Continue')
-        disp('Left mouse to flag spectrum. Continue to save and move on. Try again to ignore last.')
-        disp('Middle mouse to exit and save.')
-        flag = zeros(1,nSpectra);
-        for tries=1:10
-            h1 = uicontrol(fh5,'Style', 'pushbutton', 'String', 'Continue',...
-                'Position', [5 100 50 25], 'Callback', 'uiresume');
-            uicontrol(h1)
-            uiwait(fh5)
-
-            [x,y] = ginput(1);
-
-            plot(x,y,'k*')
-            h2 = uicontrol('Style', 'pushbutton', 'String', 'Continue',...
-                'Position', [5 100 50 25], 'Callback', 'butt=1; uiresume');
-            h3 = uicontrol('Style', 'pushbutton', 'String', 'Try Again',...
-                'Position', [5 50 50 25], 'Callback','butt=0; uiresume');
-            h4 = uicontrol('Style', 'pushbutton', 'String', 'Exit',...
-                'Position', [5 5 50 25], 'Callback','butt=3; uiresume');
-            uicontrol(h2)
-            uicontrol(h3)
-            uicontrol(h4)
-            uiwait
-            if butt == 0
-                continue
-            elseif butt == 1
-                [wv,windex] = find_nearest(x,wave);
-                RrsX = Rrs(:,windex);
-                [rrs,Rindex] = find_nearest(y,RrsX);
-                plot(wave,Rrs(Rindex,:),'k','LineWidth',3)
-                flag(Rindex) = 1;
-                fprintf('Index: %d\n',Rindex)
-                disp(flag(Rindex))
-                % disp([x,y])
-                % continue
-            elseif butt == 3
-                break
-            end
-        end
-
-        flags.Manual = flag';
-        %% Apply flags
-        flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
-            [flags.Manual] | [flags.negRrs];
-
-        %% Write CSV file for awr2env.py
-        % In effect, we will have 2 files. One will have 0 or 1, the other 0 or 2.
-        % Round to the nearest second
-        dateTime = dateshift(dateTime,'start','minute') + seconds(round(second(dateTime)));
-        YEAR = year(dateTime)';
-        MONTH = month(dateTime)';
-        DAY = day(dateTime)';
-        HOUR = hour(dateTime)';
-        MINUTE = minute(dateTime)';
-        SECOND = round(second(dateTime))';
-
-        if validation
-            csvOutFile = sprintf('dat/%s_flags.csv',cruise);
-            FLAG = 2*int8(~flag'); % 0, 1, or 2 for reject, seabass-all, validation
-        else
-            csvOutFile = sprintf('dat/%s_all_flags.csv',cruise);
-            FLAG = int8(~flag'); % 0, 1, or 2 for reject, seabass-all, validation
-        end
-
-        T = table(YEAR,MONTH,DAY,HOUR,MINUTE,SECOND,FLAG);
-        writetable(T,csvOutFile)
+        manualFlag(ancillary,handles,AWR,flags)
     end
 end
 
