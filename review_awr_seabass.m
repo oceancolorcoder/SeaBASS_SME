@@ -13,11 +13,15 @@ wipe
 % Set to true unless building .env.all for NOMAD/SeaBASS
 ancillary.validation = 1;
 
-ancillary.cruise = 'UMCES_Missouri_Reservoirs';
-ancillary.SBA = 1;
+ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+ancillary.SBA = 0;
+% relAz = (135+90)/2; % Not provided per cast, but in this range
+relAz = 90; % Not provided per cast, but reported as about +/-90
+% ancillary.cruise = 'UMCES_Missouri_Reservoirs';
+% ancillary.SBA = 1;
 
 clobber = 1;    % Re-evaluate thresholds and save over old
-plotQWIP = 0;   % Plot QWIP (x2)
+plotQWIP = 1;   % Plot QWIP (x2)
 plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
 manualSelection = 1;    % Manually select/flag additional spectra
 
@@ -45,34 +49,38 @@ if clobber
     try
         % Potential of wave mismatch depending on glint processing
         AWR.wave = dBase(1).wavelength;
-        AWR.Rrs = vertcat(dBase.rrs);
-        AWR.Es = vertcat(dBase.es);
-        AWR.Lw = vertcat(dBase.lw);
-        if ~ancillary.SBA
-            % Have not encountered this yet
-            AWR.Li = vertcat(dBase.li);            
-        end
-        if sum(contains(fieldnames(dBase),'rrs_sd')) > 0
-            Rrs_sd = vertcat(dBase.rrs_sd);
-            % Reduce resolution for clarity
-            AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
-            AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
-            AWR.Rrs_sd = interp1(AWR.wave,AWR.Rrs_sd',AWR.wave_sd)';
-        end
-        if sum(contains(fieldnames(dBase),'rrs_unc')) > 0
-            % Note we are re-using _sd in the variable for uncertainty
-            % (just for plots)
-            Rrs_sd = vertcat(dBase.rrs_unc);
-            AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
-            AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
-            AWR.Rrs_sd = interp1(AWR.wave,AWR.Rrs_sd',AWR.wave_sd)';
-        end
-        clear Rrs_sd
-
     catch
-        disp('Wavelength cannot be concatonated. Interpolating to shorter wave range')
+        disp('***** Wavelength cannot be concatonated. Interpolating to shorter wave range ****')
         % Cross this bridge when/if it arises
     end
+    AWR.Rrs = vertcat(dBase.rrs);
+    AWR.Es = vertcat(dBase.es);
+    if sum(contains(fieldnames(dBase),'lw')) > 0
+        AWR.Lw = vertcat(dBase.lw);
+    end
+    if sum(contains(fieldnames(dBase),'lt')) > 0
+        AWR.Lt = vertcat(dBase.lt);
+    end
+    if sum(contains(fieldnames(dBase),'li')) > 0
+        AWR.Li = vertcat(dBase.li);
+    end
+    if sum(contains(fieldnames(dBase),'rrs_sd')) > 0
+        Rrs_sd = vertcat(dBase.rrs_sd);
+        % Reduce resolution for clarity
+        AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
+        AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
+        AWR.Rrs_sd = interp1(AWR.wave,Rrs_sd',AWR.wave_sd)';
+    elseif sum(contains(fieldnames(dBase),'rrs_unc')) > 0
+        % Note we are re-using _sd in the variable for uncertainty
+        % (just for plots)
+        Rrs_sd = vertcat(dBase.rrs_unc);
+        AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
+        AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
+        AWR.Rrs_sd = interp1(AWR.wave,Rrs_sd',AWR.wave_sd)';
+    end
+    clear Rrs_sd
+
+    
     %% Apply the QWIP and AVW, regardless of whether they are provided
     [ancillary.qwip,QCI,ancillary.avw] = AVW_QWIP_2D_fun(AWR.Rrs,AWR.wave,'none','none');
     if plotQWIP
@@ -130,8 +138,8 @@ if clobber
         end
     end
     if ~ancillary.SBA
-        if sum(contains(fieldnames(SASData.Ancillary),'REL_AZ')) > 0
-            ancillary.relAz = [dBase.REL_AZ];
+        if exist('relAz','var')
+            ancillary.relAz = repmat(relAz,size(ancillary.sza));
         end
     end
 
@@ -152,7 +160,7 @@ if plotTimelineSpectra
     grid on
     flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
     ylabel('R_{rs} [sr^{-1}]')
-    
+
     %% Manual screening of spectra
     if manualSelection
         manualFlag(ancillary,handles,AWR,flags)

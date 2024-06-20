@@ -62,8 +62,20 @@
 ## review_awr_seabass.m
     Inputs:
        dat/[cruisename].mat from make_awr_seabass.m (dBase structure)
+    Outputs:
+       dat/[cruisename]_flags.mat (select variables and QA/QC flags)
+       plt/[cruisename]_AllSpec.png (Rrs, Es, Li, Lw with flags shown)
+       plt/[cruisename]_QWIP.png
+       plt/[cruisename]_QWIP_Hist.png
+       plt/[cruisename]_timeline.png (time series of select variables used
+       in QAQC)
+       dat/[cruisename]_all_flags.mat
+       dat/[cruisename]_flags.mat
+       dat/[cruisename]_all_flags.csv
+       dat/[cruisename]_flags.csv
 
-    Otherwise the same as review_awr_hypercp.m
+    Script for reviewing non-HyperCP data. This could include SBA, handheld, and other AWR not run in HyperCP.
+    Otherwise this script is the same as review_awr_hypercp.m above.
 
 ## batch_awr2env.py
     Inputs:
@@ -89,6 +101,10 @@
 ## awr2env_wide.py
     Inputs:
         SeaBASS files in "wide" format identified in batch_awr2env.py (Es, Rrs)
+
+    Outputs:
+        *.env.all file for NOMAD
+        *.env file for VALIDATION
 
     Otherwise the same as awr2env_tall.py
 

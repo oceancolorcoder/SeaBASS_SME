@@ -29,10 +29,17 @@ if ~ancillary.SBA
 end
 
 handles.ax14 = nexttile;
-plot(AWR.wave,AWR.Lw,'k')
-hold on
-flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
-ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
+if sum(contains(fieldnames(AWR),'Lw')) > 0
+    plot(AWR.wave,AWR.Lw,'k')
+    hold on
+    flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
+    ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
+elseif sum(contains(fieldnames(AWR),'Lt')) > 0
+    plot(AWR.wave,AWR.Lt,'k')
+    hold on
+    flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)
+    ylabel('L_t [\muW cm^{-2} nm^{-1} sr^{-1}]')
+end
 
 if all(isnan(ancillary.cloud))
     th1 = text(0.70,0.9,sprintf('Cloud: Not reported'),'Units','normalized');

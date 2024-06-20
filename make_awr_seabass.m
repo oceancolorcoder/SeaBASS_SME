@@ -11,7 +11,8 @@ wipe
 % cruise = 'RSWQ_2023'; % single spectrum per file
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
 % cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
-cruise = 'UMCES_Missouri_Reservoirs'; % SBA Lorena Silva/Greg Silsbe
+% cruise = 'UMCES_Missouri_Reservoirs'; % SBA Lorena Silva/Greg Silsbe
+cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 
 [fontName,projPath,imgPath] = machine_prefs();
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
@@ -45,13 +46,39 @@ for i=1:length(fileList{1})
             dBase(i).cloud = extractfield(sbHeader,'cloud_percent');
             dBase(i).wind = extractfield(sbHeader,'wind_speed');
             dBase(i).water_depth = extractfield(sbHeader,'water_depth');
+            dBase(i).wave_height = extractfield(sbHeader,'wave_height');
             dBase(i).wavelength = data.wavelength';
             dBase(i).rrs = data.rrs';
             dBase(i).rrs_sd = data.rrs_sd';
-            dBase(i).es = data.ed';
-            dBase(i).es_sd = data.ed_sd';
-            dBase(i).lw = data.lw';
-            dBase(i).lw_sd = data.lw_sd';
+            % Es and Ed terms are assumed equivalent (Es = Ed(0+))
+            if sum(contains(fieldnames(data),'es')) > 0
+                dBase(i).es = data.es';
+                dBase(i).es_sd = data.es_sd';
+            elseif sum(contains(fieldnames(data),'ed')) > 0
+                dBase(i).es = data.ed';
+                dBase(i).es_sd = data.ed_sd';
+            end
+            % Lref for handhelds is the plaque radiance. Check their
+            % equation for Es in their notes (e.g. Es = Lref*pi*(1/0.99),
+            % where 0.99 is calibrated reflectance in the relevant bands
+
+            % Li and Lsky are the same
+            if sum(contains(fieldnames(data),'li')) > 0
+                dBase(i).li = data.li';
+                dBase(i).li_sd = data.li_sd';
+            elseif sum(contains(fieldnames(data),'lsky')) > 0
+                dBase(i).li = data.lsky';
+                dBase(i).li_sd = data.lsky_sd';
+            end
+            if sum(contains(fieldnames(data),'lw')) > 0
+                dBase(i).lw = data.lw';
+                dBase(i).lw_sd = data.lw_sd';
+            end
+            if sum(contains(fieldnames(data),'lt')) > 0
+                dBase(i).lt = data.lt';
+                dBase(i).lt_sd = data.lt_sd';
+            end
+            
 
             missing = extractfield(sbHeader,'missing');
 

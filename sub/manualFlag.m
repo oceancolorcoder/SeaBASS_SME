@@ -87,7 +87,12 @@ flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
 if ~ancillary.SBA
     flagSpectra(handles.ax13,AWR.wave,AWR.Li,flags,0)
 end
-flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
+
+if sum(contains(fieldnames(AWR),'Lw')) > 0
+    flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
+elseif sum(contains(fieldnames(AWR),'Lt')) > 0
+    flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)
+end
 
 if ancillary.validation
     exportgraphics(handles.fh3,sprintf('plt/%s_spec.png',ancillary.cruise))

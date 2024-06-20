@@ -1,6 +1,7 @@
 function flags = writeFlags(ancillary, thresholds, AWR)
 % flags is the structure with individual flags
 % flag is the logical vector for the prescribed flags
+% 0, 1, or 2 for reject, seabass-only, validation
 
 
 %% Set flags
