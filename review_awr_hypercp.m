@@ -15,10 +15,12 @@ ancillary.validation = 1;
 
 % ancillary.cruise = 'EXPORTSNA_NASA';
 ancillary.cruise = 'EXPORTSNA_Boss';
+% ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
+
 ancillary.SBA = 0;
 
 clobber = 1;    % Re-evaluate thresholds and save over old
-plotQWIP = 0;   % Plot QWIP (x2)
+plotQWIP = 1;   % Plot QWIP (x2)
 plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
 manualSelection = 1;    % Manually select/flag additional spectra
 

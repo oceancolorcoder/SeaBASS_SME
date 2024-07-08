@@ -7,16 +7,18 @@ tile1 = tiledlayout(2,2);
 handles.ax11 = nexttile;
 plot(AWR.wave,AWR.Rrs,'k')
 hold on
-if exist('AWR.Rrs_sd','var')
+if isfield(AWR','Rrs_sd')
     errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'color','k')
 end
-
 flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
 ylabel('R_{rs} [sr^{-1}]')
 
 handles.ax12 = nexttile;
 plot(AWR.wave,AWR.Es,'k')
 hold on
+if isfield(AWR','Es_sd')
+    errorbar(AWR.wave_sd,AWR.Es_sub,AWR.Es_sd,'color','k')
+end
 flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
 ylabel('E_s [\muW cm^{-2} nm^{-1}]')
 
@@ -29,12 +31,12 @@ if ~ancillary.SBA
 end
 
 handles.ax14 = nexttile;
-if sum(contains(fieldnames(AWR),'Lw')) > 0
+if isfield(AWR,'Lw')
     plot(AWR.wave,AWR.Lw,'k')
     hold on
     flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
     ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
-elseif sum(contains(fieldnames(AWR),'Lt')) > 0
+elseif isfield(AWR,'Lt')
     plot(AWR.wave,AWR.Lt,'k')
     hold on
     flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)

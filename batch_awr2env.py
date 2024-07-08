@@ -9,19 +9,21 @@ import os
 from pathlib import Path
 import glob
 import shutil
-import awr2env_hypercp
-import awr2env_seabass
+import awr2env_wide
+import awr2env_tall
 
-# cruise='EXPORTSNA_Boss'
+cruise='EXPORTSNA_Boss'
 # cruise='EXPORTSNA_NASA'
-cruise='UMCES_Missouri_Reservoirs'
+# cruise='UMCES_Missouri_Reservoirs'
+# cruise='Brewin_Superyacht_Science_2019-2020'
 
 metadata={}
 metadata['dataType']='AOP'
-# metadata['instrument']='HyperCP'
-metadata['instrument']='TriOS'
-# metadata['subInstrument']='pySAS'
-metadata['subInstrument']='SBA'
+metadata['instrument']='HyperCP'
+# metadata['instrument']='TriOS'
+metadata['subInstrument']='pySAS'
+# metadata['subInstrument']='SolarTracker'
+# metadata['subInstrument']='SBA'
 
 
 if sys.platform == 'darwin':
@@ -55,9 +57,9 @@ for all in [True,False]:
         # Convert cruise to .env or .env.all
         if metadata['instrument'].lower() == 'hypercp':
             # For files with no wavelength column
-            fileout_env = awr2env_hypercp.main(dict_args)
+            fileout_env = awr2env_wide.main(dict_args)
         else:
-            fileout_env = awr2env_seabass.main(dict_args)
+            fileout_env = awr2env_tall.main(dict_args)
         source = Path('./',fileout_env)
         dest = Path('./dat/',fileout_env)
         if source.exists():

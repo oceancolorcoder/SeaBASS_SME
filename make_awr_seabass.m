@@ -7,12 +7,14 @@
 % D. Aurin NASA/GSFC March 2024
 
 wipe
-% cruise = 'viirs_2019_foster'; % Use make_database_hypercp.m
+% cruise = 'viirs_2019_foster'; 
 % cruise = 'RSWQ_2023'; % single spectrum per file
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
 % cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
 % cruise = 'UMCES_Missouri_Reservoirs'; % SBA Lorena Silva/Greg Silsbe
-cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% cruise = 'Brewin_Superyacht_Science_2018';
+cruise = 'ArcticCC_Norton_Sound_2022';
 
 [fontName,projPath,imgPath] = machine_prefs();
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
@@ -23,17 +25,12 @@ fclose(fid);
 
 dBase = struct();
 
+j=0;
 for i=1:length(fileList{1})
-    file = fileList{1}{i};
-    if ~contains(file,'tgz')
-
-        % fp = fullfile(projPath,file);
-        fp = file;
+    fp = fileList{1}{i};
+    if ~contains(fp,'tgz')
         [data, sbHeader, headerArray, dataArray] = readsb(fp,'MakeStructure', true);
         fNames = fieldnames(data);
-
-        % Test for multiple spectra per file
-        % if length(data.datenum)
 
         % Need to determine the organization of the data
         if sum(strcmpi(fNames,'wavelength')) ~= 0
@@ -83,10 +80,44 @@ for i=1:length(fileList{1})
             missing = extractfield(sbHeader,'missing');
 
         else
-            if sum(strcmpi(fNames,'time')) ~= 0
-                if length(data.time) > 1
-                    disp('Multiple timestamps found. Multi-spectrum file.')
+            if sum(strcmpi(fNames,'time')) ~= 0                
+                disp('Rows organized by time')
+                if j==0
+                    dBase(1).datetime = datetime(now,'ConvertFrom','datenum','TimeZone','UTC');
                 end
+                % For HyperInSPACE output, this will require matching Es to
+                % Rrs from seperate files
+                for n=1:length(data.time)
+                    % Check for existing matching time in dBase
+                    newDateTime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');                    
+                    [x,y] = find_nearest(newDateTime,[dBase.datetime]);
+                    if x ~= newDateTime
+                        j=j+1;
+                        dBase(j).datetime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');
+                        dBase(j).latitude = datetime(data.latitude(n));
+                        dBase(j).latitude = datetime(data.latitude(n));
+                        dBase(i).station = extractfield(sbHeader,'station');
+                        % dBase(i).cloud = extractfield(sbHeader,'cloud_percent');
+                        dBase(i).cloud = data.cloud(n);
+                        % dBase(i).wind = extractfield(sbHeader,'wind_speed');
+                        dBase(i).wind = data.wind(n);
+                        dBase(i).water_depth = extractfield(sbHeader,'water_depth');
+                        dBase(i).wave_height = extractfield(sbHeader,'wave_height');                        
+                        dBase(i).relAz = data.relAz(n);
+                        dBase(i).sza = data.sza(n);
+                        dBase(i).aot = data.aot(n);
+
+                        
+
+                    else                        
+                        dBase(y).dataXXX = XXX;
+                    end
+
+                    
+
+                end
+
+
             end
         end
     end

@@ -11,8 +11,9 @@
 wipe
 
 %% Setup
-cruise = 'EXPORTSNA_NASA';
-% cruise = 'EXPORTSNA_Boss';
+% cruise = 'Brewin_Superyacht_Science_2019-2020';
+% cruise = 'EXPORTSNA_NASA';
+cruise = 'EXPORTSNA_Boss';
 % cruise = 'viirs_2019_foster'; % Rejected for bad metadata, haha! (it's mine)
 
 

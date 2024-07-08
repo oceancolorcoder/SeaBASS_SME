@@ -11,10 +11,12 @@
 wipe
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
+ancillary.validation = 0;
 
-ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
-ancillary.SBA = 0;
+
+ancillary.cruise = 'ArcticCC_Norton_Sound_2022';
+% ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+ancillary.SBA = 1;
 % relAz = (135+90)/2; % Not provided per cast, but in this range
 relAz = 90; % Not provided per cast, but reported as about +/-90
 % ancillary.cruise = 'UMCES_Missouri_Reservoirs';
@@ -55,28 +57,39 @@ if clobber
     end
     AWR.Rrs = vertcat(dBase.rrs);
     AWR.Es = vertcat(dBase.es);
-    if sum(contains(fieldnames(dBase),'lw')) > 0
+    if isfield(dBase,'lw')
         AWR.Lw = vertcat(dBase.lw);
     end
-    if sum(contains(fieldnames(dBase),'lt')) > 0
+    if isfield(dBase,'lt')
         AWR.Lt = vertcat(dBase.lt);
     end
-    if sum(contains(fieldnames(dBase),'li')) > 0
+    if isfield(dBase,'li')
         AWR.Li = vertcat(dBase.li);
     end
-    if sum(contains(fieldnames(dBase),'rrs_sd')) > 0
+    AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
+    if isfield(dBase,'rrs_sd')
         Rrs_sd = vertcat(dBase.rrs_sd);
-        % Reduce resolution for clarity
-        AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
+        % Reduce resolution for clarity        
         AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
         AWR.Rrs_sd = interp1(AWR.wave,Rrs_sd',AWR.wave_sd)';
-    elseif sum(contains(fieldnames(dBase),'rrs_unc')) > 0
+    elseif isfield(dBase,'rrs_unc')
         % Note we are re-using _sd in the variable for uncertainty
         % (just for plots)
         Rrs_sd = vertcat(dBase.rrs_unc);
-        AWR.wave_sd = min(AWR.wave):10:max(AWR.wave);
         AWR.Rrs_sub = interp1(AWR.wave,AWR.Rrs',AWR.wave_sd)';
         AWR.Rrs_sd = interp1(AWR.wave,Rrs_sd',AWR.wave_sd)';
+    end
+    if isfield(dBase,'es_sd')
+        Es_sd = vertcat(dBase.es_sd);
+        % Reduce resolution for clarity
+        AWR.Es_sub = interp1(AWR.wave,AWR.Es',AWR.wave_sd)';
+        AWR.Es_sd = interp1(AWR.wave,Es_sd',AWR.wave_sd)';
+    elseif isfield(dBase,'es_unc')
+        % Note we are re-using _sd in the variable for uncertainty
+        % (just for plots)
+        Es_sd = vertcat(dBase.es_unc);
+        AWR.Es_sub = interp1(AWR.wave,AWR.Es',AWR.wave_sd)';
+        AWR.Es_sd = interp1(AWR.wave,Es_sd',AWR.wave_sd)';
     end
     clear Rrs_sd
 
@@ -91,19 +104,19 @@ if clobber
     end
 
     %% Populate threshold variables
-    if sum(contains(fieldnames(dBase),'chlor_a')) > 0
+    if isfield(dBase,'chlor_a')
         ancillary.chl = [dBase.chlor_a];
     else
         % Calculate chl
         ancillary.chl=nan(1,AWR.nSpectra);
     end
-    if sum(contains(fieldnames(dBase),'QA_score')) > 0
+    if isfield(dBase,'QA_score')
         ancillary.qa = [dBase.QA_score];
     else
         % Calculate QA_score
         ancillary.qa=nan(1,AWR.nSpectra);
     end
-    if sum(contains(fieldnames(dBase),'cloud')) > 0
+    if isfield(dBase,'cloud')
         ancillary.cloud = [dBase.cloud]; % Percent
     else
         ancillary.cloud = nan(1,AWR.nSpectra);
@@ -119,10 +132,10 @@ if clobber
         ancillary.cloud(whrNaN & (li750./es750 > thresholds.cloudIndexes(2))) = 100; % Fully overcast (no good for validation, but okay for AWR)
     end
 
-    if sum(contains(fieldnames(dBase),'wind')) > 0
+    if isfield(dBase,'wind')
         ancillary.wind = [dBase.wind];
     end
-    if sum(contains(fieldnames(dBase),'SZA')) > 0
+    if isfield(dBase,'SZA')
         ancillary.sza = [dBase.SZA];
     else
         disp('Calculating SZA')        
@@ -154,9 +167,12 @@ if plotTimelineSpectra
     handles = plotFlags(AWR,ancillary,flags);
 
     handles.fh5 = figure('position',[1926         381        1196         979]);
-    handles.ah1 = axes;
+    handles.ah1 = axes;    
     plot(AWR.wave,AWR.Rrs,'k')
     hold on
+    if isfield(AWR,'Rrs_sd')
+        errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'k')
+    end
     grid on
     flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
     ylabel('R_{rs} [sr^{-1}]')
