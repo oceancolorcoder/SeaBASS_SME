@@ -12,17 +12,18 @@ import shutil
 import awr2env_wide
 import awr2env_tall
 
-cruise='EXPORTSNA_Boss'
+# cruise='EXPORTSNA_Boss'
 # cruise='EXPORTSNA_NASA'
 # cruise='UMCES_Missouri_Reservoirs'
 # cruise='Brewin_Superyacht_Science_2019-2020'
+cruise='Brewin_Superyacht_Science_2018'
 
 metadata={}
 metadata['dataType']='AOP'
 metadata['instrument']='HyperCP'
 # metadata['instrument']='TriOS'
-metadata['subInstrument']='pySAS'
-# metadata['subInstrument']='SolarTracker'
+# metadata['subInstrument']='pySAS'
+metadata['subInstrument']='SolarTracker'
 # metadata['subInstrument']='SBA'
 
 

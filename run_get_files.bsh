@@ -9,8 +9,16 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 ## Setup
 # NO SPACES in LIS file. LIS files are retained in projDir.
 
-cruise='ArcticCC_Norton_Sound_2022'
-iFile=${projDir}'/20240125_ARCTICCC_Norton_Sound_2022_HyperPro-SBA.lis'
+# cruise='ArcticCC_Norton_Sound_2022'
+# iFile=${projDir}'/20240125_ARCTICCC_Norton_Sound_2022_HyperPro-SBA.lis'
+# cruise='ArcticCC_Alakanuk_2022'
+# iFile=${projDir}'/20240125_daurin_ARCTICCC_Alakanuk_2022_HyperPro.lis'
+
+# cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs'
+# iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs.lis'
+cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs'
+iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs.lis'
+
 
 # cruise='BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'
 # iFile=${projDir}'/20240524_kturner_CCNY_BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023_AWR.lis'
@@ -20,9 +28,9 @@ iFile=${projDir}'/20240125_ARCTICCC_Norton_Sound_2022_HyperPro-SBA.lis'
 # iFile=${projDir}'/20240524_kturner_CCNY_BIOSCAPE_COASTAL_CARBON_Walker_Bay_2023_AWR.lis'
 
 # cruise='Brewin_Superyacht_Science_2019-2020'
-# iFile=${projDir}'/bbrewin_Superyacht_science_2019-2020_HyperSAS.lis'
+# iFile=${projDir}'/bbrewin_Superyacht_science_2019-2020_HyperSAS_updated.lis'
 # cruise='Brewin_Superyacht_Science_2018'
-# iFile=${projDir}'/Brewin_Superyacht_Science_2018_HyperInSpace_Rrs_Es.lis'
+# iFile=${projDir}'/Brewin_Superyacht_Science_2018_HyperInSpace_Rrs_Es_updated.lis'
 
 # cruise='UMCES_Missouri_Reservoirs'
 # iFile=${projDir}'/20240202_UMCES_Missouri_Reservoirs_RSWQ__MO_RSWQ_2023_AWR.lis'

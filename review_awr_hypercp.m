@@ -14,10 +14,9 @@ wipe
 ancillary.validation = 1;
 
 % ancillary.cruise = 'EXPORTSNA_NASA';
-ancillary.cruise = 'EXPORTSNA_Boss';
+% ancillary.cruise = 'EXPORTSNA_Boss';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
-
-ancillary.SBA = 0;
+ancillary.cruise = 'Brewin_Superyacht_Science_2018';
 
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)
@@ -39,6 +38,7 @@ if ancillary.validation
     thresholds.qwip = 0.17; % Experimental
 end
 
+ancillary.SBA = 0; % Set to 1 for SBA data (used by subroutines, not here)
 %% Load and overview
 if clobber
     load(sprintf('dat/%s.mat',ancillary.cruise)) % SASData from make_database_hypercp.m
