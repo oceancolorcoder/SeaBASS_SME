@@ -5,40 +5,35 @@
 
 % Screen on QWIP,RelAz,Wind,SZA, and visual inspection
 %
-% D. Aurin NASA/GSFC June 2024
+% D. Aurin NASA/GSFC July 2024
 
-%% Setup
 wipe
+[fonts,projPath] = machine_prefs;
+%% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
+ancillary.validation = 0;
 
+ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % ancillary.cruise = 'EXPORTSNA_NASA';
 % ancillary.cruise = 'EXPORTSNA_Boss';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
-ancillary.cruise = 'Brewin_Superyacht_Science_2018';
+% ancillary.cruise = 'Brewin_Superyacht_Science_2018';
 
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)
 plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
 manualSelection = 1;    % Manually select/flag additional spectra
 
-thresholds.negRrs = [380 680]; % Spectral range of negatives to eliminate from all sets
-thresholds.relAz = [87 138]; % M99, Z17, IOCCG
-thresholds.sza = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
-thresholds.wind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
-thresholds.qwip = 0.2; % Dierssen et al. 2022
-thresholds.qa = 0.2; % This is more experimental. Monitor it, but don't filter it.
-thresholds.cloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likely to be the worst. This is experimental.
-thresholds.cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast
-if ancillary.validation
-    % Thresholds for ancillary.validation
-    thresholds.relAz = [89 136]; % M99, Z17, IOCCG
-    thresholds.wind = 7; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
-    thresholds.qwip = 0.17; % Experimental
+%% Auto Setup
+thresholds = set_thresholds(ancillary.validation);
+ancillary.SBA = 0; % Set to 1 for SBA data (used by subroutines for review_awr_seabass, not here)
+SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise);
+plotPath = fullfile(SMEPath,'Plots');
+if ~exist("plotPath","dir")
+    mkdir(plotPath)
 end
 
-ancillary.SBA = 0; % Set to 1 for SBA data (used by subroutines, not here)
 %% Load and overview
 if clobber
     load(sprintf('dat/%s.mat',ancillary.cruise)) % SASData from make_database_hypercp.m
@@ -78,8 +73,8 @@ if clobber
     if plotQWIP
         minMaxPlot = [440 590];
         fh12 = QWIP_figure_fun(AWR.Rrs,AWR.wave,ancillary.avw,ancillary.cruise,minMaxPlot);
-        exportgraphics(fh12(1),sprintf('plt/%s_QWIP.png',ancillary.cruise))
-        exportgraphics(fh12(2),sprintf('plt/%s_QWIP_Hist.png',ancillary.cruise))
+        exportgraphics(fh12(1),sprintf('%s/%s_QWIP.png',plotPath,ancillary.cruise))
+        exportgraphics(fh12(2),sprintf('%s/%s_QWIP_Hist.png',plotPath,ancillary.cruise))
     end
 
     %% Populate threshold variables
@@ -140,7 +135,7 @@ end
 
 %% Show spectra with filtered data
 if plotTimelineSpectra
-    handles = plotFlags(AWR,ancillary,flags);    
+    handles = plotFlags(AWR,ancillary,flags,plotPath);
 
     handles.fh5 = figure('position',[1926         381        1196         979]);
     handles.ah1 = axes;
@@ -152,7 +147,7 @@ if plotTimelineSpectra
 
     %% Manual screening of spectra
     if manualSelection
-        manualFlag(ancillary,handles,AWR,flags)
+        manualFlag(ancillary,handles,AWR,flags,plotPath)
     end
 end
 

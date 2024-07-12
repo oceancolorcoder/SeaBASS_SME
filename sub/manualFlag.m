@@ -1,4 +1,4 @@
-function manualFlag(ancillary,handles,AWR,flags)
+function manualFlag(ancillary,handles,AWR,flags,plotPath)
 
 if ancillary.validation
     fprintf('Screen for validation\n')
@@ -95,9 +95,9 @@ elseif sum(contains(fieldnames(AWR),'Lt')) > 0
 end
 
 if ancillary.validation
-    exportgraphics(handles.fh3,sprintf('plt/%s_spec.png',ancillary.cruise))
+    exportgraphics(handles.fh3,sprintf('%s/%s_spec.png',plotPath,ancillary.cruise))
 else
-    exportgraphics(handles.fh3,sprintf('plt/%s_all_spec.png',ancillary.cruise))
+    exportgraphics(handles.fh3,sprintf('%s/%s_all_spec.png',plotPath,ancillary.cruise))
 end
 
 %% Write CSV file for awr2env.py

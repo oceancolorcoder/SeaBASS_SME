@@ -12,19 +12,23 @@ import shutil
 import awr2env_wide
 import awr2env_tall
 
-# cruise='EXPORTSNA_Boss'
-# cruise='EXPORTSNA_NASA'
+# cruise='EXPORTS_EXPORTSNA_Boss_AOP_pySAS_R2'
+# cruise='EXPORTS_EXPORTSNA_Mannino_AOP_pySAS_R1'
+cruise='EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0'
 # cruise='UMCES_Missouri_Reservoirs'
 # cruise='Brewin_Superyacht_Science_2019-2020'
-cruise='Brewin_Superyacht_Science_2018'
+# cruise='Brewin_Superyacht_Science_2018'
+# cruise='BIOSCAPE_COASTAL_CARBON_Walker_Bay'
 
 metadata={}
 metadata['dataType']='AOP'
 metadata['instrument']='HyperCP'
 # metadata['instrument']='TriOS'
-# metadata['subInstrument']='pySAS'
-metadata['subInstrument']='SolarTracker'
+# metadata['instrument']='SVC'
+metadata['subInstrument']='pySAS'
+# metadata['subInstrument']='SolarTracker'
 # metadata['subInstrument']='SBA'
+# metadata['subInstrument']='SVC'
 
 
 if sys.platform == 'darwin':
@@ -41,6 +45,8 @@ for all in [True,False]:
         if metadata['instrument'].lower() == 'hypercp':
             # STATIONs from HyperCP
             fileList = glob.glob(os.path.join(inPath,f'*{type}_[!STATION]*.sb'))
+        elif metadata['instrument'].lower() == 'svc':
+            fileList = glob.glob(os.path.join(inPath,f'*.sb'))
         else:
             fileList = glob.glob(os.path.join(inPath,f'*{type}_*.sb'))
 
@@ -62,7 +68,10 @@ for all in [True,False]:
         else:
             fileout_env = awr2env_tall.main(dict_args)
         source = Path('./',fileout_env)
-        dest = Path('./dat/',fileout_env)
+        # dest = Path('./dat/',fileout_env)
+        dest = Path(inPath,'ENV')
+        if not dest.exists():
+            Path.mkdir(dest)
         if source.exists():
             shutil.move(fileout_env,dest)
 

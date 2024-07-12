@@ -1,4 +1,4 @@
-function handles = plotFlags(AWR,ancillary,flags)
+function handles = plotFlags(AWR,ancillary,flags,plotPath)
 
 fontName = machine_prefs;
 
@@ -75,9 +75,9 @@ end
 set(handles.fh3,'position',[1926         381        1196         979])
 
 if ancillary.validation
-    exportgraphics(handles.fh3,sprintf('plt/%s_spec.png',ancillary.cruise))
+    exportgraphics(handles.fh3,sprintf('%s/%s_spec.png',plotPath,ancillary.cruise))
 else
-    exportgraphics(handles.fh3,sprintf('plt/%s_all_spec.png',ancillary.cruise))
+    exportgraphics(handles.fh3,sprintf('%s/%s_all_spec.png',plotPath,ancillary.cruise))
 end
 
 %% Figure timeline Chl, AVW, QWIP, Wei score, ..
@@ -144,7 +144,7 @@ end
 
 set([ax21 ax22 ax23 ax24],'fontname',fontName, 'fontsize', 14, 'xgrid', 'on')
 if ancillary.validation
-    exportgraphics(fh4,sprintf('plt/%s_timeline.png',ancillary.cruise))
+    exportgraphics(fh4,sprintf('%s/%s_timeline.png',plotPath,ancillary.cruise))
 else
-    exportgraphics(fh4,sprintf('plt/%s_all_timeline.png',ancillary.cruise))
+    exportgraphics(fh4,sprintf('%s/%s_all_timeline.png',plotPath,ancillary.cruise))
 end

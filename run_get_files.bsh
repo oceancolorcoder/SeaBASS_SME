@@ -13,11 +13,15 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # iFile=${projDir}'/20240125_ARCTICCC_Norton_Sound_2022_HyperPro-SBA.lis'
 # cruise='ArcticCC_Alakanuk_2022'
 # iFile=${projDir}'/20240125_daurin_ARCTICCC_Alakanuk_2022_HyperPro.lis'
+# cruise='ArcticCC_Alakanuk_2023'
+# iFile=${projDir}'/20240125_ARCTICCC_Alakanuk_2023_HyperPro-SBA.lis'
+# cruise='ArcticCC_Norton_Sound_2023'
+# iFile=${projDir}'/20240125_ARCTICCC_Norton_Sound_2023_HyperPro-SBA.lis'
 
 # cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs'
 # iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs.lis'
-cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs'
-iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs.lis'
+# cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs'
+# iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs.lis'
 
 
 # cruise='BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'
@@ -35,10 +39,13 @@ iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWR
 # cruise='UMCES_Missouri_Reservoirs'
 # iFile=${projDir}'/20240202_UMCES_Missouri_Reservoirs_RSWQ__MO_RSWQ_2023_AWR.lis'
 
+cruise='EXPORTSNP_NASA'
+iFile=${projDir}'/daurin_EXPORTSNP_HyperSAS_updated.lis'
 # cruise='EXPORTSNA_NASA'
 # iFile=${projDir}'/20240313_NASA_GSFC_EXPORTS_EXPORTSNA_pySAS.lis'
 # cruise='EXPORTSNA_Boss'
 # iFile=${projDir}'/20240112_Boss_EXPORTS_EXPORTSNA_PySAS.lis'
+
 
 # cruise='Belgium_2021'
 # iFile=${projDir}'/Twardowski_AQUALOOKS_Belgium_2021_AOP_rrs_Lu_Ed.lis'

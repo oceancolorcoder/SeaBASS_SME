@@ -7,16 +7,23 @@
 %
 % D. Aurin NASA/GSFC June 2024
 
-%% Setup
+%% Manual Setup
 wipe
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 0;
+ancillary.validation = 1;
 
+ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% ancillary.cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs';
+% ancillary.cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs';
+% ancillary.cruise = 'ArcticCC_Norton_Sound_2022';
+% ancillary.cruise = 'ArcticCC_Alakanuk_2022';
+% ancillary.cruise = 'ArcticCC_Alakanuk_2023';
+% ancillary.cruise = 'ArcticCC_Norton_Sound_2023';
 
-ancillary.cruise = 'ArcticCC_Norton_Sound_2022';
-% ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 ancillary.SBA = 1;
+
 % relAz = (135+90)/2; % Not provided per cast, but in this range
 relAz = 90; % Not provided per cast, but reported as about +/-90
 % ancillary.cruise = 'UMCES_Missouri_Reservoirs';
@@ -25,21 +32,14 @@ relAz = 90; % Not provided per cast, but reported as about +/-90
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)
 plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
-manualSelection = 1;    % Manually select/flag additional spectra
+manualSelection = 0;    % Manually select/flag additional spectra
 
-thresholds.negRrs = [380 680]; % Spectral range of negatives to eliminate from all sets
-thresholds.relAz = [87 138]; % M99, Z17, IOCCG
-thresholds.sza = [18 62]; % e.g. 20: Zhang 2017, depends on wind, e.g. 60:Brewin 2016
-thresholds.wind = 10; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
-thresholds.qwip = 0.2; % Dierssen et al. 2022
-thresholds.qa = 0.2; % This is more experimental. Monitor it, but don't filter it.
-thresholds.cloud = [20 80]; % Clear and fully overcast should be okay. 20% - 80% are likely to be the worst. This is experimental.
-thresholds.cloudIndexes = [0.05 0.3]; % From Ruddick et al. 2006 based on M99 models, where <0.05 is clear, >0.3 is fully overcast
-if ancillary.validation
-    % Thresholds for ancillary.validation
-    thresholds.relAz = [89 136]; % M99, Z17, IOCCG
-    thresholds.wind = 7; %  6-7 m/s: IOCCG Draft Protocols, D'Alimonte pers. comm. 2019; 10 m/s: NASA SeaWiFS Protocols; 15 m/s: Zibordi 2009,
-    thresholds.qwip = 0.17; % Experimental
+%% Auto Setup
+thresholds = set_thresholds(ancillary.validation);
+SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise);
+plotPath = fullfile(SMEPath,'Plots');
+if ~exist("plotPath","dir")
+    mkdir(plotPath)
 end
 
 %% Load and overview
@@ -99,8 +99,8 @@ if clobber
     if plotQWIP
         minMaxPlot = [440 590];
         fh12 = QWIP_figure_fun(AWR.Rrs,AWR.wave,ancillary.avw,ancillary.cruise,minMaxPlot);
-        exportgraphics(fh12(1),sprintf('plt/%s_QWIP.png',ancillary.cruise))
-        exportgraphics(fh12(2),sprintf('plt/%s_QWIP_Hist.png',ancillary.cruise))
+        exportgraphics(fh12(1),sprintf('%s/%s_QWIP.png',plotPath,ancillary.cruise))
+        exportgraphics(fh12(2),sprintf('%s/%s_QWIP_Hist.png',plotPath,ancillary.cruise))
     end
 
     %% Populate threshold variables
@@ -122,6 +122,10 @@ if clobber
         ancillary.cloud = nan(1,AWR.nSpectra);
     end
     if ~ancillary.SBA
+        if ~isfield(AWR,'Li')
+            disp('****Check that this is not SBA****')
+            return
+        end
         % Fill in with cloud index where empty
         whrNaN = isnan(ancillary.cloud)';
         [wv,iwv] = find_nearest(750,AWR.wave);
@@ -163,8 +167,8 @@ else
 end
 
 %% Show spectra with filtered data
-if plotTimelineSpectra
-    handles = plotFlags(AWR,ancillary,flags);
+if plotTimelineSpectra    
+    handles = plotFlags(AWR,ancillary,flags,plotPath);
 
     handles.fh5 = figure('position',[1926         381        1196         979]);
     handles.ah1 = axes;    
@@ -179,7 +183,7 @@ if plotTimelineSpectra
 
     %% Manual screening of spectra
     if manualSelection
-        manualFlag(ancillary,handles,AWR,flags)
+        manualFlag(ancillary,handles,AWR,flags,plotPath)
     end
 end
 

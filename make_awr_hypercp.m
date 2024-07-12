@@ -11,7 +11,8 @@
 wipe
 
 %% Setup
-cruise = 'Brewin_Superyacht_Science_2018';
+cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
+% cruise = 'Brewin_Superyacht_Science_2018';
 % cruise = 'Brewin_Superyacht_Science_2019-2020';
 % cruise = 'EXPORTSNA_NASA';
 % cruise = 'EXPORTSNA_Boss';
@@ -26,6 +27,10 @@ disp(cruise)
 SASDir = fullfile(projPath,'L2');
 SASlist = dir([SASDir '/*.hdf']); % <-- Filter out STATION data? Probably.
 fprintf('Number of files found: %d\n', numel(SASlist))
+if numel(SASlist) == 0
+    disp('Check your path')
+    return
+end
 
 ensemble = 0;
 for i=1:length(SASlist)

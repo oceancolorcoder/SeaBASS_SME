@@ -12,9 +12,16 @@ wipe
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
 % cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
 % cruise = 'UMCES_Missouri_Reservoirs'; % SBA Lorena Silva/Greg Silsbe
-% cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % cruise = 'Brewin_Superyacht_Science_2018';
-cruise = 'ArcticCC_Norton_Sound_2022';
+% cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023';
+% cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs';
+% cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs';
+% cruise = 'ArcticCC_Norton_Sound_2022';
+% cruise = 'ArcticCC_Alakanuk_2022';
+% cruise = 'ArcticCC_Alakanuk_2023';
+cruise = 'ArcticCC_Norton_Sound_2023';
+
 
 [fontName,projPath,imgPath] = machine_prefs();
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
