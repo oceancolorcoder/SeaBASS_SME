@@ -40,9 +40,9 @@ else
     ph7 = plot(ax,wave,Var*nan,'color','b','linewidth',2,'linestyle','--');
 end
 if sum(flags.Manual)>0
-    ph8 = plot(ax,wave,Var(flags.Manual,:),'color','m','linewidth',2,'linestyle','--');
+    ph8 = plot(ax,wave,Var(flags.Manual,:),'k','LineWidth',3);
 else
-    ph8 = plot(ax,wave,Var*nan,'color','m','linewidth',2,'linestyle','--');
+    ph8 = plot(ax,wave,Var*nan,'k','LineWidth',3);
 end
 
 

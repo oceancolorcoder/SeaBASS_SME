@@ -138,6 +138,7 @@ def main(dict_args):
             # define output vars
             out_dir = Path('./') # Could change this to be the same folder
 
+            # Cruise.DataType_Instrument_OptionalSubInstrument.FirstInvestigator.OptionalSubcruise.env 
             if dict_args['all'] == True:
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env.all"

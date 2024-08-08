@@ -6,14 +6,17 @@
 % Screen on QWIP,RelAz,Wind,SZA, and visual inspection
 %
 % D. Aurin NASA/GSFC June 2024
+%
+%   Thresholds provided by the set_thresholds function
 
-%% Manual Setup
 wipe
+[fonts,projPath] = machine_prefs;
+%% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
+ancillary.validation = 0;
 
-ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
+% ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'; % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2022_AWRrrs';
 % ancillary.cruise = 'CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs';
@@ -21,24 +24,25 @@ ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay'; % Kyle Turner/Maria Tzo
 % ancillary.cruise = 'ArcticCC_Alakanuk_2022';
 % ancillary.cruise = 'ArcticCC_Alakanuk_2023';
 % ancillary.cruise = 'ArcticCC_Norton_Sound_2023';
+ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 
-ancillary.SBA = 1;
+ancillary.SBA = 0;
 
-% relAz = (135+90)/2; % Not provided per cast, but in this range
-relAz = 90; % Not provided per cast, but reported as about +/-90
+% relAz = (135+90)/2;   % Not provided per cast, but in this range
+relAz = 90;             % Not provided per cast, but reported as about +/-90
 % ancillary.cruise = 'UMCES_Missouri_Reservoirs';
 % ancillary.SBA = 1;
 
-clobber = 1;    % Re-evaluate thresholds and save over old
-plotQWIP = 1;   % Plot QWIP (x2)
-plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
-manualSelection = 0;    % Manually select/flag additional spectra
+clobber = 1;                % Re-evaluate thresholds and save over old
+plotQWIP = 0;               % Plot QWIP (x2)
+plotTimelineSpectra = 1;    % Req'd for manualSelection. Plot timeline and spectral plot of flagged spectra
+manualSelection = 1;        % Manually select/flag additional spectra
 
 %% Auto Setup
 thresholds = set_thresholds(ancillary.validation);
 SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise);
 plotPath = fullfile(SMEPath,'Plots');
-if ~exist("plotPath","dir")
+if ~isfolder(plotPath)
     mkdir(plotPath)
 end
 
@@ -90,6 +94,42 @@ if clobber
         Es_sd = vertcat(dBase.es_unc);
         AWR.Es_sub = interp1(AWR.wave,AWR.Es',AWR.wave_sd)';
         AWR.Es_sd = interp1(AWR.wave,Es_sd',AWR.wave_sd)';
+    end
+    if isfield(dBase,'lt_sd')
+        Lt_sd = vertcat(dBase.lt_sd);
+        % Reduce resolution for clarity
+        AWR.Lt_sub = interp1(AWR.wave,AWR.Lt',AWR.wave_sd)';
+        AWR.Lt_sd = interp1(AWR.wave,Lt_sd',AWR.wave_sd)';
+    elseif isfield(dBase,'lt_unc')
+        % Note we are re-using _sd in the variable for uncertainty
+        % (just for plots)
+        Lt_sd = vertcat(dBase.lt_unc);
+        AWR.Lt_sub = interp1(AWR.wave,AWR.Lt',AWR.wave_sd)';
+        AWR.Lt_sd = interp1(AWR.wave,Lt_sd',AWR.wave_sd)';
+    end
+    if isfield(dBase,'lw_sd')
+        Lw_sd = vertcat(dBase.lw_sd);
+        % Reduce resolution for clarity
+        AWR.Lw_sub = interp1(AWR.wave,AWR.Lw',AWR.wave_sd)';
+        AWR.Lw_sd = interp1(AWR.wave,Lw_sd',AWR.wave_sd)';
+    elseif isfield(dBase,'lw_unc')
+        % Note we are re-using _sd in the variable for uncertainty
+        % (just for plots)
+        Lw_sd = vertcat(dBase.lw_unc);
+        AWR.Lw_sub = interp1(AWR.wave,AWR.Lw',AWR.wave_sd)';
+        AWR.Lw_sd = interp1(AWR.wave,Lw_sd',AWR.wave_sd)';
+    end
+    if isfield(dBase,'li_sd')
+        Li_sd = vertcat(dBase.li_sd);
+        % Reduce resolution for clarity
+        AWR.Li_sub = interp1(AWR.wave,AWR.Li',AWR.wave_sd)';
+        AWR.Li_sd = interp1(AWR.wave,Li_sd',AWR.wave_sd)';
+    elseif isfield(dBase,'li_unc')
+        % Note we are re-using _sd in the variable for uncertainty
+        % (just for plots)
+        Li_sd = vertcat(dBase.li_unc);
+        AWR.Li_sub = interp1(AWR.wave,AWR.Li',AWR.wave_sd)';
+        AWR.Li_sd = interp1(AWR.wave,Li_sd',AWR.wave_sd)';
     end
     clear Rrs_sd
 
@@ -175,7 +215,7 @@ if plotTimelineSpectra
     plot(AWR.wave,AWR.Rrs,'k')
     hold on
     if isfield(AWR,'Rrs_sd')
-        errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'k')
+        errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'color',[0.8 0.8 0.8])
     end
     grid on
     flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
@@ -183,7 +223,14 @@ if plotTimelineSpectra
 
     %% Manual screening of spectra
     if manualSelection
-        manualFlag(ancillary,handles,AWR,flags,plotPath)
+        flags.Manual = manualFlag(ancillary,handles,AWR,flags,plotPath);
+        set(handles.th0, 'String', sprintf('Manual: %d',sum(flags.Manual)),'Units','normalized');
+
+        if ancillary.validation
+            exportgraphics(handles.fh3,sprintf('%s/%s_spec.png',plotPath,ancillary.cruise))
+        else
+            exportgraphics(handles.fh3,sprintf('%s/%s_all_spec.png',plotPath,ancillary.cruise))
+        end
     end
 end
 

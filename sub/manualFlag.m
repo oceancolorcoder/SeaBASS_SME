@@ -1,4 +1,4 @@
-function manualFlag(ancillary,handles,AWR,flags,plotPath)
+function flagsManual = manualFlag(ancillary,handles,AWR,flags,plotPath)
 
 if ancillary.validation
     fprintf('Screen for validation\n')
@@ -33,7 +33,11 @@ while 1
     end
 
     [x,y] = ginput(1);
-    plot(x,y,'k*')
+    % plot(x,y,'k*')
+    [~,windex] = find_nearest(x,AWR.wave);
+    RrsX = AWR.Rrs(:,windex);
+    [~,Rindex] = find_nearest(y,RrsX);
+    plot(AWR.wave(windex),AWR.Rrs(Rindex,windex),'*k')
 
     set(button1,'userdata',0)
     set(button2,'userdata',0)
@@ -71,6 +75,7 @@ if size(flag,1)~=1
 else
     flags.Manual = logical(flag);
 end
+flagsManual = flags.Manual;
 %% Apply flags
 if ~ancillary.SBA
     flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...

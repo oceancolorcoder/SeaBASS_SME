@@ -30,7 +30,7 @@ thresholds = set_thresholds(ancillary.validation);
 ancillary.SBA = 0; % Set to 1 for SBA data (used by subroutines for review_awr_seabass, not here)
 SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise);
 plotPath = fullfile(SMEPath,'Plots');
-if ~exist("plotPath","dir")
+if ~isfolder(plotPath)
     mkdir(plotPath)
 end
 
@@ -148,6 +148,12 @@ if plotTimelineSpectra
     %% Manual screening of spectra
     if manualSelection
         manualFlag(ancillary,handles,AWR,flags,plotPath)
+
+        if ancillary.validation
+            exportgraphics(handles.fh3,sprintf('%s/%s_spec.png',plotPath,ancillary.cruise))
+        else
+            exportgraphics(handles.fh3,sprintf('%s/%s_all_spec.png',plotPath,ancillary.cruise))
+        end
     end
 end
 

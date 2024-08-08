@@ -1,4 +1,6 @@
 function handles = plotFlags(AWR,ancillary,flags,plotPath)
+% 2x2 plot window with spectra highlighted for flags
+%   Uncertainty optional (_sd or _unc from SeaBASS files)
 
 fontName = machine_prefs;
 
@@ -8,7 +10,7 @@ handles.ax11 = nexttile;
 plot(AWR.wave,AWR.Rrs,'k')
 hold on
 if isfield(AWR','Rrs_sd')
-    errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'color','k')
+    errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'color',[0.5 0.5 0.5])
 end
 flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
 ylabel('R_{rs} [sr^{-1}]')
@@ -17,7 +19,7 @@ handles.ax12 = nexttile;
 plot(AWR.wave,AWR.Es,'k')
 hold on
 if isfield(AWR','Es_sd')
-    errorbar(AWR.wave_sd,AWR.Es_sub,AWR.Es_sd,'color','k')
+    errorbar(AWR.wave_sd,AWR.Es_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
 end
 flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
 ylabel('E_s [\muW cm^{-2} nm^{-1}]')
@@ -28,6 +30,10 @@ if ~ancillary.SBA
     hold on
     flagSpectra(handles.ax13,AWR.wave,AWR.Li,flags,0)
     ylabel('L_i [\muW cm^{-2} nm^{-1} sr^{-1}]')
+
+    if isfield(AWR','Li_sd')
+        errorbar(AWR.wave_sd,AWR.Li_sub,AWR.Li_sd,'color',[0.5 0.5 0.5])
+    end
 end
 
 handles.ax14 = nexttile;
@@ -36,13 +42,23 @@ if isfield(AWR,'Lw')
     hold on
     flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
     ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
+
+    if isfield(AWR','Lw_sd')
+        errorbar(AWR.wave_sd,AWR.Lw_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
+    end
 elseif isfield(AWR,'Lt')
     plot(AWR.wave,AWR.Lt,'k')
     hold on
     flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)
     ylabel('L_t [\muW cm^{-2} nm^{-1} sr^{-1}]')
+
+    if isfield(AWR','Lt_sd')
+        errorbar(AWR.wave_sd,AWR.Lt_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
+    end
 end
 
+
+th0 = text(0.70,0.95,sprintf('Manual: %d',sum(flags.Manual)),'Units','normalized');
 if all(isnan(ancillary.cloud))
     th1 = text(0.70,0.9,sprintf('Cloud: Not reported'),'Units','normalized');
 else
@@ -64,12 +80,12 @@ th7 = text(0.70,0.60,sprintf('Neg. Rrs: %d',sum(flags.negRrs)),'Units','normaliz
 if ~ancillary.SBA
     gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');
-    set([th1 th2 th3 th4 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
+    set([th0 th1 th2 th3 th4 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
     set([handles.ax11 handles.ax12 handles.ax13 handles.ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
 else
     gud = ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');
-    set([th1 th2 th3 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
+    set([th0 th1 th2 th3 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
     set([handles.ax11 handles.ax12 handles.ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
 end
 set(handles.fh3,'position',[1926         381        1196         979])
@@ -79,6 +95,8 @@ if ancillary.validation
 else
     exportgraphics(handles.fh3,sprintf('%s/%s_all_spec.png',plotPath,ancillary.cruise))
 end
+
+handles.th0 = th0;
 
 %% Figure timeline Chl, AVW, QWIP, Wei score, ..
 fh4 = figure;

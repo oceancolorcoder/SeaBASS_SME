@@ -7,7 +7,7 @@
 % D. Aurin NASA/GSFC March 2024
 
 wipe
-% cruise = 'viirs_2019_foster'; 
+% cruise = 'viirs_2019_foster';
 % cruise = 'RSWQ_2023'; % single spectrum per file
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
 % cruise = 'Belgium_2021'; % Twardowski; Not AWR. Returned to Mike.
@@ -20,7 +20,8 @@ wipe
 % cruise = 'ArcticCC_Norton_Sound_2022';
 % cruise = 'ArcticCC_Alakanuk_2022';
 % cruise = 'ArcticCC_Alakanuk_2023';
-cruise = 'ArcticCC_Norton_Sound_2023';
+% cruise = 'ArcticCC_Norton_Sound_2023';
+cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 
 
 [fontName,projPath,imgPath] = machine_prefs();
@@ -41,7 +42,7 @@ for i=1:length(fileList{1})
 
         % Need to determine the organization of the data
         if sum(strcmpi(fNames,'wavelength')) ~= 0
-            disp('Found wavelength column. Single spectrum file')            
+            disp('Found wavelength column. Single spectrum file')
             % datenum is repeated
             dBase(i).datetime = datetime(data.datenum(1),'ConvertFrom','datenum','TimeZone','UTC');
             dBase(i).latitude = extractfield(sbHeader,'north_latitude');
@@ -82,12 +83,12 @@ for i=1:length(fileList{1})
                 dBase(i).lt = data.lt';
                 dBase(i).lt_sd = data.lt_sd';
             end
-            
+
 
             missing = extractfield(sbHeader,'missing');
 
         else
-            if sum(strcmpi(fNames,'time')) ~= 0                
+            if sum(strcmpi(fNames,'time')) ~= 0
                 disp('Rows organized by time')
                 if j==0
                     dBase(1).datetime = datetime(now,'ConvertFrom','datenum','TimeZone','UTC');
@@ -96,7 +97,7 @@ for i=1:length(fileList{1})
                 % Rrs from seperate files
                 for n=1:length(data.time)
                     % Check for existing matching time in dBase
-                    newDateTime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');                    
+                    newDateTime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');
                     [x,y] = find_nearest(newDateTime,[dBase.datetime]);
                     if x ~= newDateTime
                         j=j+1;
@@ -109,22 +110,17 @@ for i=1:length(fileList{1})
                         % dBase(i).wind = extractfield(sbHeader,'wind_speed');
                         dBase(i).wind = data.wind(n);
                         dBase(i).water_depth = extractfield(sbHeader,'water_depth');
-                        dBase(i).wave_height = extractfield(sbHeader,'wave_height');                        
+                        dBase(i).wave_height = extractfield(sbHeader,'wave_height');
                         dBase(i).relAz = data.relAz(n);
                         dBase(i).sza = data.sza(n);
                         dBase(i).aot = data.aot(n);
 
-                        
 
-                    else                        
+
+                    else
                         dBase(y).dataXXX = XXX;
                     end
-
-                    
-
                 end
-
-
             end
         end
     end
@@ -156,5 +152,5 @@ sortedT = sortrows(T,'datetime');
 dBase = table2struct(sortedT);
 
 save(['dat/' cruise],'dBase')
-    
+
 

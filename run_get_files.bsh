@@ -43,9 +43,9 @@ cruise='EXPORTSNP_NASA'
 iFile=${projDir}'/daurin_EXPORTSNP_HyperSAS_updated.lis'
 # cruise='EXPORTSNA_NASA'
 # iFile=${projDir}'/20240313_NASA_GSFC_EXPORTS_EXPORTSNA_pySAS.lis'
+
 # cruise='EXPORTSNA_Boss'
 # iFile=${projDir}'/20240112_Boss_EXPORTS_EXPORTSNA_PySAS.lis'
-
 
 # cruise='Belgium_2021'
 # iFile=${projDir}'/Twardowski_AQUALOOKS_Belgium_2021_AOP_rrs_Lu_Ed.lis'
@@ -57,6 +57,10 @@ iFile=${projDir}'/daurin_EXPORTSNP_HyperSAS_updated.lis'
 # iFile=${projDir}'/Mannino_VIIRS_validation_2019_foster.lis'
 # cruise='RSWQ_2023'
 # iFile=${projDir}'/20231115_silsbe_Missouri_Reservoirs_RSWQ_MO_RSWQ_2023_radiometry.lis'
+
+cruise='VIIRS_VALIDATION_viirs_2021_gunter'
+iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2021_gunter_R1.lis'
+
 echo 'Downloading for LIS file: ' $iFile
 ####################
 
