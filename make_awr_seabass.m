@@ -21,7 +21,9 @@ wipe
 % cruise = 'ArcticCC_Alakanuk_2022';
 % cruise = 'ArcticCC_Alakanuk_2023';
 % cruise = 'ArcticCC_Norton_Sound_2023';
-cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+% cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
+% cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 
 
 [fontName,projPath,imgPath] = machine_prefs();
@@ -42,7 +44,7 @@ for i=1:length(fileList{1})
 
         % Need to determine the organization of the data
         if sum(strcmpi(fNames,'wavelength')) ~= 0
-            disp('Found wavelength column. Single spectrum file')
+            disp('Found wavelength column. Single spectrum "Tall" file')
             % datenum is repeated
             dBase(i).datetime = datetime(data.datenum(1),'ConvertFrom','datenum','TimeZone','UTC');
             dBase(i).latitude = extractfield(sbHeader,'north_latitude');
@@ -52,14 +54,23 @@ for i=1:length(fileList{1})
             dBase(i).wind = extractfield(sbHeader,'wind_speed');
             dBase(i).water_depth = extractfield(sbHeader,'water_depth');
             dBase(i).wave_height = extractfield(sbHeader,'wave_height');
+            
+            if isfield(sbHeader,'relaz')
+                dBase(i).relaz = extractfield(sbHeader,'relaz');
+            end
+            if isfield(sbHeader,'sza')
+                dBase(i).sza = extractfield(sbHeader,'sza');
+            end
+
             dBase(i).wavelength = data.wavelength';
             dBase(i).rrs = data.rrs';
             dBase(i).rrs_sd = data.rrs_sd';
+
             % Es and Ed terms are assumed equivalent (Es = Ed(0+))
-            if sum(contains(fieldnames(data),'es')) > 0
+            if isfield(data,'es')
                 dBase(i).es = data.es';
                 dBase(i).es_sd = data.es_sd';
-            elseif sum(contains(fieldnames(data),'ed')) > 0
+            elseif isfield(data,'ed')
                 dBase(i).es = data.ed';
                 dBase(i).es_sd = data.ed_sd';
             end
@@ -68,18 +79,18 @@ for i=1:length(fileList{1})
             % where 0.99 is calibrated reflectance in the relevant bands
 
             % Li and Lsky are the same
-            if sum(contains(fieldnames(data),'li')) > 0
+            if isfield(data,'li')
                 dBase(i).li = data.li';
                 dBase(i).li_sd = data.li_sd';
-            elseif sum(contains(fieldnames(data),'lsky')) > 0
+            elseif isfield(data,'lsky')
                 dBase(i).li = data.lsky';
                 dBase(i).li_sd = data.lsky_sd';
             end
-            if sum(contains(fieldnames(data),'lw')) > 0
+            if isfield(data,'lw')
                 dBase(i).lw = data.lw';
                 dBase(i).lw_sd = data.lw_sd';
             end
-            if sum(contains(fieldnames(data),'lt')) > 0
+            if isfield(data,'lt')
                 dBase(i).lt = data.lt';
                 dBase(i).lt_sd = data.lt_sd';
             end

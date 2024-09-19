@@ -12,9 +12,10 @@ wipe
 %% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 0;
+ancillary.validation = 1;
 
-ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
+ancillary.cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
+% ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % ancillary.cruise = 'EXPORTSNA_NASA';
 % ancillary.cruise = 'EXPORTSNA_Boss';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
@@ -43,10 +44,10 @@ if clobber
     try
         % Potential of wave mismatch depending on glint processing
         AWR.wave = vertcat(SASData.Reflectance(1).Rrs_HYPER_wavelength);
-        AWR.Rrs = vertcat(SASData.Reflectance.Rrs_HYPER);
-        AWR.Es = vertcat(SASData.Irradiance.ES_HYPER);
-        AWR.Li = vertcat(SASData.Radiance.LI_HYPER);
-        AWR.Lw = vertcat(SASData.Radiance.LW_HYPER);
+        AWR.rrs = vertcat(SASData.Reflectance.Rrs_HYPER);
+        AWR.es = vertcat(SASData.Irradiance.ES_HYPER);
+        AWR.li = vertcat(SASData.Radiance.LI_HYPER);
+        AWR.lw = vertcat(SASData.Radiance.LW_HYPER);
     catch
         disp('Wavelength cannot be concatonated. Interpolating to shorter wave range')
         % In this case, interpolation of data to the shorter wavelength vector
@@ -58,21 +59,21 @@ if clobber
         iShort = find(nBands == min(nBands)); iShort = iShort(1);
         AWR.wave = SASData.Reflectance(iShort).Rrs_HYPER_wavelength;
         for i=AWR.nSpectra:-1:1
-            AWR.Rrs(i,:) = interp1(SASData.Reflectance(i).Rrs_HYPER_wavelength, ...
+            AWR.rrs(i,:) = interp1(SASData.Reflectance(i).Rrs_HYPER_wavelength, ...
                 SASData.Reflectance(i).Rrs_HYPER, AWR.wave);
-            AWR.Es(i,:) = interp1(SASData.Irradiance(i).ES_HYPER_wavelength, ...
+            AWR.es(i,:) = interp1(SASData.Irradiance(i).ES_HYPER_wavelength, ...
                 SASData.Irradiance(i).ES_HYPER, AWR.wave);
-            AWR.Li(i,:) = interp1(SASData.Radiance(i).LI_HYPER_wavelength, ...
+            AWR.li(i,:) = interp1(SASData.Radiance(i).LI_HYPER_wavelength, ...
                 SASData.Radiance(i).LI_HYPER, AWR.wave);
-            AWR.Lw(i,:) = interp1(SASData.Radiance(i).LW_HYPER_wavelength, ...
+            AWR.lw(i,:) = interp1(SASData.Radiance(i).LW_HYPER_wavelength, ...
                 SASData.Radiance(i).LW_HYPER, AWR.wave);
         end
     end
     %% Apply the QWIP and AVW, regardless of whether they are provided
-    [ancillary.qwip,QCI,ancillary.avw] = AVW_QWIP_2D_fun(AWR.Rrs,AWR.wave,'none','none');
+    [ancillary.qwip,QCI,ancillary.avw] = AVW_QWIP_2D_fun(AWR.rrs,AWR.wave,'none','none');
     if plotQWIP
         minMaxPlot = [440 590];
-        fh12 = QWIP_figure_fun(AWR.Rrs,AWR.wave,ancillary.avw,ancillary.cruise,minMaxPlot);
+        fh12 = QWIP_figure_fun(AWR.rrs,AWR.wave,ancillary.avw,ancillary.cruise,minMaxPlot);
         exportgraphics(fh12(1),sprintf('%s/%s_QWIP.png',plotPath,ancillary.cruise))
         exportgraphics(fh12(2),sprintf('%s/%s_QWIP_Hist.png',plotPath,ancillary.cruise))
     end
@@ -111,8 +112,8 @@ if clobber
     % Fill in with cloud index where empty
     whrNaN = isnan(ancillary.cloud)';
     [wv,iwv] = find_nearest(750,AWR.wave);
-    li750 = AWR.Li(:,iwv);
-    es750 = AWR.Es(:,iwv);
+    li750 = AWR.li(:,iwv);
+    es750 = AWR.es(:,iwv);
     ancillary.cloud(whrNaN & (li750./es750 < thresholds.cloudIndexes(1))) = 0; % Clear
     ancillary.cloud(whrNaN & ( li750./es750 >= thresholds.cloudIndexes(1)) & li750./es750 < thresholds.cloudIndexes(2) ) = 50; % Partly cloudy
     ancillary.cloud(whrNaN & (li750./es750 > thresholds.cloudIndexes(2))) = 100; % Fully overcast (no good for validation, but okay for AWR)
@@ -130,7 +131,7 @@ if clobber
     flags = writeFlags(ancillary,thresholds, AWR);
 else
     load(sprintf('dat/%s_flags.mat',ancillary.cruise))
-    AWR.nSpectra = size(AWR.Rrs,1);
+    AWR.nSpectra = size(AWR.rrs,1);
 end
 
 %% Show spectra with filtered data
@@ -139,15 +140,15 @@ if plotTimelineSpectra
 
     handles.fh5 = figure('position',[1926         381        1196         979]);
     handles.ah1 = axes;
-    plot(AWR.wave,AWR.Rrs,'k')
+    plot(AWR.wave,AWR.rrs,'k')
     hold on
     grid on
-    flagSpectra(handles.ah1,AWR.wave,AWR.Rrs,flags,0)
+    flagSpectra(handles.ah1,AWR.wave,AWR.rrs,flags,0)
     ylabel('R_{rs} [sr^{-1}]')
 
     %% Manual screening of spectra
     if manualSelection
-        manualFlag(ancillary,handles,AWR,flags,plotPath)
+        manualFlag(ancillary,handles,AWR,flags,plotPath);
 
         if ancillary.validation
             exportgraphics(handles.fh3,sprintf('%s/%s_spec.png',plotPath,ancillary.cruise))

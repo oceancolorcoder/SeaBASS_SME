@@ -19,7 +19,7 @@ end
 flags.QWIP = ancillary.qwip > thresholds.qwip;
 flags.QA = ancillary.qa < thresholds.qa;
 waveRange = find(AWR.wave >= thresholds.negRrs(1) & AWR.wave <= thresholds.negRrs(2));
-flags.negRrs = any(AWR.Rrs(:,waveRange) < 0.0,2)';
+flags.negRrs = any(AWR.rrs(:,waveRange) < 0.0,2)';
 
 flags.Manual = 0*flags.negRrs;
 

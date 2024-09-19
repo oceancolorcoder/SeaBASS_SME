@@ -5,19 +5,19 @@ D. Aurin, NASA/GSFC 2024-04-05
 
 This is meant for "wide" SeaBASS files with wavelengths in the fields, not as a column.
 """
+import argparse
+from pathlib import Path
+from datetime import datetime
+from math import isnan
+import re
+import csv
+from copy import copy
+from collections import OrderedDict
+import numpy as np
+import pytz
+from SB_support import readSB#, is_number
 
 def main(dict_args):
-    import argparse
-    from pathlib import Path
-    from datetime import datetime
-    from math import isnan
-    import re
-    import csv
-    from copy import copy
-    from collections import OrderedDict
-    import numpy as np
-    import pytz
-    from SB_support import readSB#, is_number
 
     parser = argparse.ArgumentParser()
     fields_req = ['rrs', 'es']
@@ -28,16 +28,15 @@ def main(dict_args):
     metadata = dict_args['metadata']
     print(f"Flag file: {dict_args['flag_file']}") # SeaBASS only or validation
     print(f"Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ")
-    if {dict_args['all']}:
+    if dict_args['all']:
         print('NOMAD files')
     else:
         print('VALIDATION files')
 
-
     timezone = pytz.utc
     filein_flag = Path(dict_args['flag_file'])
     if filein_flag.exists():
-        with open(filein_flag, 'r') as csvfile:
+        with open(filein_flag, 'r', encoding="utf-8") as csvfile:
             csvtable = csv.reader(csvfile)
             data = list(csvtable)
             data.pop(0)
@@ -66,11 +65,11 @@ def main(dict_args):
             parser.error('ERROR: invalid --seabass_file specified; does ' + filein_sb.name + ' exist?')
 
         #check for valid cruise name
-        if not 'cruise' in ds.headers:
+        if 'cruise' not in ds.headers:
             parser.error('ERROR: cruise name not found in ' + filein_sb.name)
 
         #check for valid fields
-        if not 'fields' in ds.headers:
+        if 'fields' not in ds.headers:
             parser.error('ERROR: fields not found in ' + filein_sb.name)
 
         #check for valid dtimes
@@ -139,7 +138,7 @@ def main(dict_args):
             out_dir = Path('./') # Could change this to be the same folder
 
             # Cruise.DataType_Instrument_OptionalSubInstrument.FirstInvestigator.OptionalSubcruise.env 
-            if dict_args['all'] == True:
+            if dict_args['all']:
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env.all"
                     # f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env.all"

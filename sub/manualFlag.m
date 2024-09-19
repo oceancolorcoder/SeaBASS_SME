@@ -2,8 +2,10 @@ function flagsManual = manualFlag(ancillary,handles,AWR,flags,plotPath)
 
 if ancillary.validation
     fprintf('Screen for validation\n')
+    title('Screen for validation')
 else
     fprintf('Screen for NOMAD\n')
+    title('Screen for NOMAD')
 end
 
 flag = zeros(1,AWR.nSpectra);
@@ -35,9 +37,9 @@ while 1
     [x,y] = ginput(1);
     % plot(x,y,'k*')
     [~,windex] = find_nearest(x,AWR.wave);
-    RrsX = AWR.Rrs(:,windex);
-    [~,Rindex] = find_nearest(y,RrsX);
-    plot(AWR.wave(windex),AWR.Rrs(Rindex,windex),'*k')
+    rrsX = AWR.rrs(:,windex);
+    [~,Rindex] = find_nearest(y,rrsX);
+    plot(AWR.wave(windex),AWR.rrs(Rindex,windex),'*k')
 
     set(button1,'userdata',0)
     set(button2,'userdata',0)
@@ -54,9 +56,9 @@ while 1
         continue
     elseif get(button2,'userdata') == 1
         [~,windex] = find_nearest(x,AWR.wave);
-        RrsX = AWR.Rrs(:,windex);
-        [~,Rindex] = find_nearest(y,RrsX);
-        plot(AWR.wave,AWR.Rrs(Rindex,:),'k','LineWidth',3)
+        rrsX = AWR.rrs(:,windex);
+        [~,Rindex] = find_nearest(y,rrsX);
+        plot(AWR.wave,AWR.rrs(Rindex,:),'k','LineWidth',3)
         flag(Rindex) = 1;
         fprintf('Index of selected spectrum: %d\n',Rindex)
         % disp(flag(Rindex))
@@ -87,16 +89,16 @@ else
     set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
 end
 
-flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
-flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
+flagSpectra(handles.ax11,AWR.wave,AWR.rrs,flags,1)
+flagSpectra(handles.ax12,AWR.wave,AWR.es,flags,0)
 if ~ancillary.SBA
-    flagSpectra(handles.ax13,AWR.wave,AWR.Li,flags,0)
+    flagSpectra(handles.ax13,AWR.wave,AWR.li,flags,0)
 end
 
-if sum(contains(fieldnames(AWR),'Lw')) > 0
-    flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
-elseif sum(contains(fieldnames(AWR),'Lt')) > 0
-    flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)
+if isfield(AWR,'lw')
+    flagSpectra(handles.ax14,AWR.wave,AWR.lw,flags,0)
+elseif isfield(AWR,'lt')
+    flagSpectra(handles.ax14,AWR.wave,AWR.lt,flags,0)
 end
 
 if ancillary.validation

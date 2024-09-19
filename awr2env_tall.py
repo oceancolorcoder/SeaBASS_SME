@@ -28,7 +28,7 @@ def main(dict_args):
     metadata = dict_args['metadata']
     print(f"Flag file: {dict_args['flag_file']}") # SeaBASS only or validation
     print(f"Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ")
-    if {dict_args['all']}:
+    if dict_args['all'] ==  True:
         print('NOMAD files')
     else:
         print('VALIDATION files')
@@ -91,6 +91,7 @@ def main(dict_args):
         match = re.search('[DEG]',ds.headers['east_longitude'])
         lon =float(match.string[0:match.start()-1])   
 
+        firstGoodIndx = 0
         if fIndx == 0:
             # define output vars
             out_dir = Path('./') # Could change this to be the same folder
@@ -159,7 +160,8 @@ def main(dict_args):
             print(f'No matching time found in flag file: {ds.dtime[0]}')
 
         if flag[index] != 0:
-
+            if firstGoodIndx == 0:
+                firstGoodIndx = fIndx
             binFlag = 2**0 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water) None for Lsky/Li/Lw, etc.
 
             header_depth = False
@@ -260,7 +262,7 @@ def main(dict_args):
             # Tack on the wavelength to the data_out key, values
             wavelength = ds.data['wavelength']
             # Test that subsequent files follow the first file
-            if fIndx == 0:
+            if fIndx == firstGoodIndx:
                 firstWL = wavelength
             if wavelength != firstWL:
                 parser.error('ERROR: Wavelengths do not match first file in ' + filein_sb.name)

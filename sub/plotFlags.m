@@ -7,53 +7,53 @@ fontName = machine_prefs;
 handles.fh3 = figure;
 tile1 = tiledlayout(2,2);
 handles.ax11 = nexttile;
-plot(AWR.wave,AWR.Rrs,'k')
+plot(AWR.wave,AWR.rrs,'k')
 hold on
-if isfield(AWR','Rrs_sd')
-    errorbar(AWR.wave_sd,AWR.Rrs_sub,AWR.Rrs_sd,'color',[0.5 0.5 0.5])
+if isfield(AWR','rrs_sd')
+    errorbar(AWR.wave_sd,AWR.rrs_sub,AWR.rrs_sd,'color',[0.5 0.5 0.5])
 end
-flagSpectra(handles.ax11,AWR.wave,AWR.Rrs,flags,1)
+flagSpectra(handles.ax11,AWR.wave,AWR.rrs,flags,1)
 ylabel('R_{rs} [sr^{-1}]')
 
 handles.ax12 = nexttile;
-plot(AWR.wave,AWR.Es,'k')
+plot(AWR.wave,AWR.es,'k')
 hold on
-if isfield(AWR','Es_sd')
-    errorbar(AWR.wave_sd,AWR.Es_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
+if isfield(AWR','es_sd')
+    errorbar(AWR.wave_sd,AWR.es_sub,AWR.es_sd,'color',[0.5 0.5 0.5])
 end
-flagSpectra(handles.ax12,AWR.wave,AWR.Es,flags,0)
+flagSpectra(handles.ax12,AWR.wave,AWR.es,flags,0)
 ylabel('E_s [\muW cm^{-2} nm^{-1}]')
 
 if ~ancillary.SBA
     handles.ax13 = nexttile;
-    plot(AWR.wave,AWR.Li,'k')
+    plot(AWR.wave,AWR.li,'k')
     hold on
-    flagSpectra(handles.ax13,AWR.wave,AWR.Li,flags,0)
+    flagSpectra(handles.ax13,AWR.wave,AWR.li,flags,0)
     ylabel('L_i [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
-    if isfield(AWR','Li_sd')
-        errorbar(AWR.wave_sd,AWR.Li_sub,AWR.Li_sd,'color',[0.5 0.5 0.5])
+    if isfield(AWR','li_sd')
+        errorbar(AWR.wave_sd,AWR.li_sub,AWR.li_sd,'color',[0.5 0.5 0.5])
     end
 end
 
 handles.ax14 = nexttile;
-if isfield(AWR,'Lw')
-    plot(AWR.wave,AWR.Lw,'k')
+if isfield(AWR,'lw')
+    plot(AWR.wave,AWR.lw,'k')
     hold on
-    flagSpectra(handles.ax14,AWR.wave,AWR.Lw,flags,0)
+    flagSpectra(handles.ax14,AWR.wave,AWR.lw,flags,0)
     ylabel('L_w [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
-    if isfield(AWR','Lw_sd')
-        errorbar(AWR.wave_sd,AWR.Lw_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
+    if isfield(AWR','lw_sd')
+        errorbar(AWR.wave_sd,AWR.lw_sub,AWR.lw_sd,'color',[0.5 0.5 0.5])
     end
-elseif isfield(AWR,'Lt')
-    plot(AWR.wave,AWR.Lt,'k')
+elseif isfield(AWR,'lt')
+    plot(AWR.wave,AWR.lt,'k')
     hold on
-    flagSpectra(handles.ax14,AWR.wave,AWR.Lt,flags,0)
+    flagSpectra(handles.ax14,AWR.wave,AWR.lt,flags,0)
     ylabel('L_t [\muW cm^{-2} nm^{-1} sr^{-1}]')
 
-    if isfield(AWR','Lt_sd')
-        errorbar(AWR.wave_sd,AWR.Lt_sub,AWR.Es_sd,'color',[0.5 0.5 0.5])
+    if isfield(AWR','lt_sd')
+        errorbar(AWR.wave_sd,AWR.lt_sub,AWR.lt_sd,'color',[0.5 0.5 0.5])
     end
 end
 

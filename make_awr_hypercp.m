@@ -11,7 +11,8 @@
 wipe
 
 %% Setup
-cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
+cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
+% cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % cruise = 'Brewin_Superyacht_Science_2018';
 % cruise = 'Brewin_Superyacht_Science_2019-2020';
 % cruise = 'EXPORTSNA_NASA';
