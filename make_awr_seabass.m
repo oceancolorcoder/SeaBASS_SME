@@ -22,8 +22,9 @@ wipe
 % cruise = 'ArcticCC_Alakanuk_2023';
 % cruise = 'ArcticCC_Norton_Sound_2023';
 % cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
-cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
+% cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
+cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 
 
 [fontName,projPath,imgPath] = machine_prefs();

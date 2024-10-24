@@ -24,7 +24,8 @@ import awr2env_tall_thomas
 # cruise='VIIRS_VALIDATION_viirs_2021_gunter'
 # cruise='VIIRS_VALIDATION_viirs_2022_sette'
 # cruise='VIIRS_VALIDATION_viirs_2023_shimada'
-cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
+# cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
+cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
 
 tall_thomas = False
 

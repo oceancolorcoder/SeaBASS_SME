@@ -65,8 +65,14 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # cruise='VIIRS_VALIDATION_viirs_2022_sette'
 # iFile=${projDir}'/20240522_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2022_sette_R1.lis'
 
-cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
-iFile=${projDir}'/20240831_Mannino_KORUS_KR_2016_hypersas_AWR.lis'
+# cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
+# iFile=${projDir}'/20240831_Mannino_KORUS_KR_2016_hypersas_AWR.lis'
+
+# cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
+# iFile=${projDir}'/20240923_Mannino_PVST_NORTHERN_INDIAN_OCEAN_EKAMSAT-2024-Bay-of-Bengal_awr.lis'
+
+cruise='PVST_PRINGLS_PRINGLS_20240417'
+iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240417_radiometry.lis'
 
 
 echo 'Downloading for LIS file: ' $iFile

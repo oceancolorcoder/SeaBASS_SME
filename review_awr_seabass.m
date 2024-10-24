@@ -14,7 +14,7 @@ wipe
 %% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
+ancillary.validation = 0;
 
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay';          % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023';    % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
@@ -26,7 +26,8 @@ ancillary.validation = 1;
 % ancillary.cruise = 'ArcticCC_Norton_Sound_2023';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
-ancillary.cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
+% ancillary.cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
+ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 
 ancillary.SBA = 0;
 
@@ -36,7 +37,7 @@ ancillary.SBA = 0;
 % ancillary.SBA = 1;
 
 clobber = 1;                % Re-evaluate thresholds and save over old
-plotQWIP = 0;               % Plot QWIP (x2)
+plotQWIP = 1;               % Plot QWIP (x2)
 plotTimelineSpectra = 1;    % Req'd for manualSelection. Plot timeline and spectral plot of flagged spectra
 manualSelection = 1;        % Manually select/flag additional spectra
 

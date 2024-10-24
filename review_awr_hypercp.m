@@ -13,8 +13,8 @@ wipe
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
 ancillary.validation = 1;
-
-ancillary.cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
+ancillary.cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
+% ancillary.cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
 % ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % ancillary.cruise = 'EXPORTSNA_NASA';
 % ancillary.cruise = 'EXPORTSNA_Boss';
