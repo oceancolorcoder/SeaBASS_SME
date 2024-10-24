@@ -15,7 +15,7 @@ from copy import copy
 from collections import OrderedDict
 import numpy as np
 import pytz
-from SB_support import readSB#, is_number
+from sub.SB_support import readSB#, is_number
 
 def main(dict_args):
 
@@ -24,6 +24,8 @@ def main(dict_args):
     fields_opt = ['bincount'] # Need to add in HyperCP. Use Ensemble_N.
     fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
+    fileout_sb = ''
+    out_dir = ''
 
     metadata = dict_args['metadata']
     print(f"Flag file: {dict_args['flag_file']}") # SeaBASS only or validation
@@ -44,9 +46,12 @@ def main(dict_args):
         flagDatetime = [timezone.localize(datetime(*x)) for x in data_array]
         flag = data_array[:,6]
     else:
+        flag = None
         parser.error('ERROR: invalid --flag_file specified; does ' + filein_flag.name + ' exist?')
 
     nSamples = 0
+    lat_lis  = []
+    lon_lis  = []
     # Loop over input SB files
     for fIndx, fnamein in enumerate(dict_args['seabass_file']):
         # filein_sb = Path(fnamein.name) ### __main__ parser gives a different list type here.
@@ -141,14 +146,9 @@ def main(dict_args):
             if dict_args['all']:
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env.all"
-                    # f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env.all"
             else:
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env"
-                    # f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env"
-
-            lat_lis  = []
-            lon_lis  = []
             unit_out  = OrderedDict()
             data_out = OrderedDict()
 
@@ -220,6 +220,7 @@ def main(dict_args):
                 index = absDTdiffsec.index(min(absDTdiffsec))
                 # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
             else:
+                index = None
                 print(f'No matching time found in flag file: {ds.dtime[i]}')
 
             if flag[index] != 0:
@@ -237,8 +238,8 @@ def main(dict_args):
                 lat_lis.append(ds.data['lat'][i])
                 lon_lis.append(ds.data['lon'][i])
 
-                data_out['lat'].append('{:.4f}'.format(ds.data['lat'][i]))
-                data_out['lon'].append('{:.4f}'.format(ds.data['lon'][i]))
+                data_out['lat'].append(f'{ds.data['lat'][i]:.4f}')                
+                data_out['lon'].append(f'{ds.data['lon'][i]:.4f}')
 
                 data_out[depth_field].append(depth)
 
@@ -276,7 +277,7 @@ def main(dict_args):
     print(f"{len(data_out['dt'])} records retained of {nSamples}")
     print('Creating', fileout_sb)
 
-    with open(out_dir / fileout_sb, 'w') as fout:
+    with open(out_dir / fileout_sb, 'w', encoding="utf-8") as fout:
 
         #output headers
         fout.write('/begin_header\n')

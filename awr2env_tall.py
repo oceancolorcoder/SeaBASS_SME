@@ -5,30 +5,31 @@ D. Aurin, NASA/GSFC 2024-04-05
 
 This is meant for "tall" SeaBASS files on station with wavelength as a column
 """
+import argparse
+from pathlib import Path
+from datetime import datetime
+from math import isnan
+import re
+import csv
+from collections import OrderedDict
+import numpy as np
+import pytz
+from sub.SB_support import readSB#, is_number
 
 def main(dict_args):
-    import argparse
-    from pathlib import Path
-    from datetime import datetime
-    from math import isnan
-    import re
-    import csv
-    from copy import copy
-    from collections import OrderedDict
-    import numpy as np
-    import pytz
-    from SB_support import readSB#, is_number
 
     parser = argparse.ArgumentParser()
     fields_req = ['rrs']
-    fields_opt = ['bincount', 'es', 'ed', 'lw'] 
-    fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
+    fields_opt = ['bincount', 'es', 'ed', 'lw']
+    # fields_dep = ['depth', 'pressure'] # No input depth fields. Depth is 0.
     missing = '-9999'
+    fileout_sb = ''
+    out_dir = ''
 
     metadata = dict_args['metadata']
     print(f"Flag file: {dict_args['flag_file']}") # SeaBASS only or validation
     print(f"Datatype: {metadata['dataType']} Instrument: {metadata['instrument']} Subinstrument: {metadata['subInstrument']} ")
-    if dict_args['all'] ==  True:
+    if dict_args['all'] is True:
         print('NOMAD files')
     else:
         print('VALIDATION files')
@@ -37,7 +38,7 @@ def main(dict_args):
     timezone = pytz.utc
     filein_flag = Path(dict_args['flag_file'])
     if filein_flag.exists():
-        with open(filein_flag, 'r') as csvfile:
+        with open(filein_flag, 'r', encoding="utf-8") as csvfile:
             csvtable = csv.reader(csvfile)
             data = list(csvtable)
             data.pop(0)
@@ -45,6 +46,7 @@ def main(dict_args):
         flagDatetime = [timezone.localize(datetime(*x)) for x in data_array]
         flag = data_array[:,6]
     else:
+        flag = None
         parser.error('ERROR: invalid --flag_file specified; does ' + filein_flag.name + ' exist?')
 
     nSamples = len(dict_args['seabass_file'])
@@ -63,14 +65,15 @@ def main(dict_args):
                         no_warn=True)
             # nSamples+=ds.length
         else:
+            ds = None
             parser.error('ERROR: invalid --seabass_file specified; does ' + filein_sb.name + ' exist?')
 
         #check for valid cruise name
-        if not 'cruise' in ds.headers:
+        if 'cruise' not in ds.headers:
             parser.error('ERROR: cruise name not found in ' + filein_sb.name)
 
         #check for valid fields
-        if not 'fields' in ds.headers:
+        if 'fields' not in ds.headers:
             parser.error('ERROR: fields not found in ' + filein_sb.name)
 
         #check for valid dtimes
@@ -81,15 +84,15 @@ def main(dict_args):
             parser.error('ERROR: date-time not parsable in ' + filein_sb.name)
 
         if 'measurement_depth' in ds.headers:
-            header_depth = True
+            # header_depth = True
             depth = float(ds.headers['measurement_depth'])
         else:
             depth = 0.0
 
         match = re.search('[DEG]',ds.headers['north_latitude'])
-        lat =float(match.string[0:match.start()-1])         
+        lat =float(match.string[0:match.start()-1])
         match = re.search('[DEG]',ds.headers['east_longitude'])
-        lon =float(match.string[0:match.start()-1])   
+        lon =float(match.string[0:match.start()-1])
 
         firstGoodIndx = 0
         if fIndx == 0:
@@ -97,7 +100,7 @@ def main(dict_args):
             out_dir = Path('./') # Could change this to be the same folder
 
         #    Cruise.DataType_Instrument_OptionalSubInstrument.FirstInvestigator.OptionalSubcruise.env 
-            if dict_args['all'] == True:
+            if dict_args['all'] is True:
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env.all"
                     # f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env.all"
@@ -105,7 +108,7 @@ def main(dict_args):
                 fileout_sb = \
                     f"{ds.headers['experiment']}_{ds.headers['cruise']}_{ds.pi.split('_')[1]}_AOP_{metadata['subInstrument']}.env"
                     # f"{ds.headers['cruise'].lower()}.{metadata['dataType'].lower()}_{metadata['instrument'].lower()}_{metadata['subInstrument'].lower()}.{ds.pi.lower()}.env"
-            
+
             # lat_lis  = []
             # lon_lis  = []
 
@@ -147,7 +150,7 @@ def main(dict_args):
 
             data_out['flags'] = []
             unit_out['flags'] = 'none'
-        
+
         # Screen for flagged data
         # if difference in flagDatetime and ds.dtime[i] is within 10 seconds...
         # For "tall" files, all ds.dtime should be the same.
@@ -157,6 +160,7 @@ def main(dict_args):
             index = absDTdiffsec.index(min(absDTdiffsec))
             # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
         else:
+            index = None
             print(f'No matching time found in flag file: {ds.dtime[0]}')
 
         if flag[index] != 0:
@@ -164,12 +168,11 @@ def main(dict_args):
                 firstGoodIndx = fIndx
             binFlag = 2**0 + 2**16 + 2**17 # 0(AOP) 9(OBPG software) 14(Es) 15(Rrs) 16(hyper) 17(above-water) None for Lsky/Li/Lw, etc.
 
-            header_depth = False
-            depth_field  = ''
+            # header_depth = False
+            # depth_field  = ''
             fields_fou = []
 
-            for var in ds.variables.keys():    
-                
+            for var in ds.variables.keys():
                 #check for required fields
                 # Set binFlag depending on dataset(s) available
                 ## This will be reset with every file, so they all have to be the same ##
@@ -179,7 +182,7 @@ def main(dict_args):
                     binFlag = binFlag + 2**14 # 14(Es)
 
                 for field in fields_req:
-                    
+
                     ma = re.search('^' + field + '$', var)
 
                     if ma:
@@ -212,8 +215,6 @@ def main(dict_args):
             if not fields_fou:
                 parser.error('ERROR: AWR data not found in ' + filein_sb.name)
 
-            # for i in range(ds.length):                        
-
             #verify row has valid AWR data
             flag_nodat = 0
 
@@ -224,7 +225,7 @@ def main(dict_args):
 
                 if flag_nodat == len(ds.data[field]):
                     parser.error('ERROR: AWR all nans found in ' + filein_sb.name)
-                
+
             # Append data
             i = 0 # Same across a file
             data_out['dt'].append(ds.dtime[i])
@@ -239,8 +240,8 @@ def main(dict_args):
             # lat_lis.append(ds.data['lat'][i])
             # lon_lis.append(ds.data['lon'][i])
 
-            data_out['lat'].append('{:.4f}'.format(lat))
-            data_out['lon'].append('{:.4f}'.format(lon))
+            data_out['lat'].append(f'{lat:.4f}')
+            data_out['lon'].append(f'{lon:.4f}')
 
             data_out['depth'].append(depth)
 
@@ -251,7 +252,7 @@ def main(dict_args):
                 else:
                     data_out['cloud'].append('nan')
             else:
-                    data_out['cloud'].append('nan')
+                data_out['cloud'].append('nan')
 
             data_out['associated_files'].append(filein_sb.name)
             data_out['associated_file_types'].append('env')
@@ -262,6 +263,7 @@ def main(dict_args):
             # Tack on the wavelength to the data_out key, values
             wavelength = ds.data['wavelength']
             # Test that subsequent files follow the first file
+            firstWL = None
             if fIndx == firstGoodIndx:
                 firstWL = wavelength
             if wavelength != firstWL:
@@ -295,7 +297,7 @@ def main(dict_args):
     print(f"{len(data_out['dt'])} records retained of {nSamples}")
     print('Creating', fileout_sb)
 
-    with open(out_dir / fileout_sb, 'w') as fout:
+    with open(out_dir / fileout_sb, 'w', encoding="utf-8") as fout:
 
         #output headers
         fout.write('/begin_header\n')
@@ -321,14 +323,14 @@ def main(dict_args):
         lat_all = [float(lati) for lati in data_out['lat']]
         lat_min = min(lat_all)
         lat_max = max(lat_all)
-        fout.write('/north_latitude={:.3f}[DEG]\n'.format(lat_max))
-        fout.write('/south_latitude={:.3f}[DEG]\n'.format(lat_min))
+        fout.write(f'/north_latitude={lat_max:.3f}[DEG]\n')
+        fout.write(f'/south_latitude={lat_min:.3f}[DEG]\n')
 
         lon_all = [float(loni) for loni in data_out['lon']]
         lon_min = min(lon_all)
         lon_max = max(lon_all)
-        fout.write('/east_longitude={:.3f}[DEG]\n'.format(lon_max))
-        fout.write('/west_longitude={:.3f}[DEG]\n'.format(lon_min))
+        fout.write(f'/east_longitude={lon_max:.3f}[DEG]\n')
+        fout.write(f'/west_longitude={lon_min:.3f}[DEG]\n')
 
         #output remaining headers
         fout.write('/missing=' + missing + '\n')
@@ -366,22 +368,18 @@ def main(dict_args):
     return fileout_sb
 
 def is_number(s):
-
-            """
-            is_number determines if a given string is a number or not, does not handle complex numbers
-            returns True for int, float, or long numbers, else False
-            syntax: is_number(str)
-            """
-
-            try:
-                float(s) # handles int, long, and float, but not complex
-            except ValueError:
-                return False
-            return True
+    """
+    is_number determines if a given string is a number or not, does not handle complex numbers
+    returns True for int, float, or long numbers, else False
+    syntax: is_number(str)
+    """
+    try:
+        float(s) # handles int, long, and float, but not complex
+    except ValueError:
+        return False
+    return True
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''\
         This program creates .env or env.all file(s) for a given SeaBASS data file(s)
         containing Above Water Radiometry (AWR) and outputting a standard set of
