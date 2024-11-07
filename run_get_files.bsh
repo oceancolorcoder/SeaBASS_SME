@@ -71,8 +71,14 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
 # iFile=${projDir}'/20240923_Mannino_PVST_NORTHERN_INDIAN_OCEAN_EKAMSAT-2024-Bay-of-Bengal_awr.lis'
 
-cruise='PVST_PRINGLS_PRINGLS_20240417'
-iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240417_radiometry.lis'
+# cruise='PVST_PRINGLS_PRINGLS_20240417'
+# iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240417_radiometry.lis'
+
+# cruise='PVST_PRINGLS_PRINGLS_20240513'
+# iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240513_radiometry.lis'
+
+cruise='PVST_PRINGLS_PRINGLS_20240612'
+iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240612_radiometry.lis'
 
 
 echo 'Downloading for LIS file: ' $iFile

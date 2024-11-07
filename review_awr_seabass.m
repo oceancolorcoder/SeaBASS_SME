@@ -27,7 +27,9 @@ ancillary.validation = 0;
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
-ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240417';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240417';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240513';
+ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 
 ancillary.SBA = 0;
 

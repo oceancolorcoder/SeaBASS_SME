@@ -25,19 +25,23 @@ import awr2env_tall_thomas
 # cruise='VIIRS_VALIDATION_viirs_2022_sette'
 # cruise='VIIRS_VALIDATION_viirs_2023_shimada'
 # cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
-cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
+# cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
+# cruise='PVST_PRINGLS_PRINGLS_20240417'
+cruise='PVST_PRINGLS_PRINGLS_20240513'
 
 tall_thomas = False
 
 metadata={}
 metadata['dataType']='AOP'
-metadata['instrument']='HyperCP'
+
+# metadata['instrument']='HyperCP'
 # metadata['instrument']='TriOS'
-# metadata['instrument']='SVC'
+metadata['instrument']='SVC'
+
 # metadata['subInstrument']='pySAS'
-metadata['subInstrument']='SolarTracker'
+# metadata['subInstrument']='SolarTracker'
 # metadata['subInstrument']='SBA'
-# metadata['subInstrument']='SVC'
+metadata['subInstrument']='SVC'
 # metadata['subInstrument']='GER'
 
 

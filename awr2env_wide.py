@@ -238,8 +238,8 @@ def main(dict_args):
                 lat_lis.append(ds.data['lat'][i])
                 lon_lis.append(ds.data['lon'][i])
 
-                data_out['lat'].append(f'{ds.data['lat'][i]:.4f}')                
-                data_out['lon'].append(f'{ds.data['lon'][i]:.4f}')
+                data_out['lat'].append(f"{ds.data['lat'][i]:.4f}")
+                data_out['lon'].append(f"{ds.data['lon'][i]:.4f}")
 
                 data_out[depth_field].append(depth)
 

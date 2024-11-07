@@ -108,4 +108,10 @@
 
     Otherwise the same as awr2env_tall.py
 
+## SVC_3C_M99_matchup.m
+Load database from cruises with both 3C and Mobley rho corrections and compare the two
+    Input:
+        dBase structure from make_awr_seabass.m
 
+    Output:
+        Plots of matched stations 3C vs. M99

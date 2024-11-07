@@ -24,7 +24,9 @@ wipe
 % cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
-cruise = 'PVST_PRINGLS_PRINGLS_20240417';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240417';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240513';
+cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 
 
 [fontName,projPath,imgPath] = machine_prefs();
@@ -56,6 +58,9 @@ for i=1:length(fileList{1})
             dBase(i).water_depth = extractfield(sbHeader,'water_depth');
             dBase(i).wave_height = extractfield(sbHeader,'wave_height');
             
+            if isfield(sbHeader,'rho_correction')
+                dBase(i).rho_correction = extractfield(sbHeader,'rho_correction');
+            end
             if isfield(sbHeader,'relaz')
                 dBase(i).relaz = extractfield(sbHeader,'relaz');
             end
