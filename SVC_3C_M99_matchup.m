@@ -12,7 +12,8 @@
 wipe
 fontName = machine_prefs;
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
-cruise = 'PVST_PRINGLS_PRINGLS_20240513';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240513';
+cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 
 load(sprintf('dat/%s.mat',cruise)) % dBase from make_awr_seabass.m
 
@@ -25,9 +26,9 @@ M99ind = strcmp(rho,'M99');
 C3 = dBase(C3ind);
 M99 = dBase(M99ind);
 
-plotSpec = 1;
-plotScat = 1;
-plotBA = 1;
+plotSpec = 0;
+plotScat = 0;
+plotBA = 0;
 plotMet = 1;
 
 %% Spectral
@@ -89,6 +90,7 @@ if plotBA
 end
 
 %% Wind/Cloud
+% Shift to using percent residual
 if plotMet
     wind = [C3.wind];
     cloud = [C3.cloud];
@@ -97,15 +99,24 @@ if plotMet
         [~,ind] = find_nearest(bands(i),wv);
         subplot(3,2,i)
         yyaxis left
-        plot(rrsM99(:,ind)-rrs3C(:,ind),wind,'.','MarkerSize',14);%,'Color','r')
+        A = [rrsM99(:,ind),rrs3C(:,ind)];
+        meanA = mean(A,2);
+        pResidual = 100*(rrsM99(:,ind)-rrs3C(:,ind)) ./ meanA;
+        r = corrcoef(pResidual,wind);
+        r2=r(1,2)^2;
+        plot(pResidual,wind,'.','MarkerSize',14);%,'Color','r')
+        text(0.1,0.8,sprintf('r^2: %.2f',r2),'Color','b','Units','normalized')
         ylabel('Wind')
         yyaxis right
-        plot(rrsM99(:,ind)-rrs3C(:,ind),cloud,'.','MarkerSize',14);
+        r = corrcoef(pResidual,cloud);
+        r2=r(1,2)^2;
+        plot(pResidual,cloud,'.','MarkerSize',14);
+        text(0.7,0.8,sprintf('r^2: %.2f',r2),'Color','r','Units','normalized')
         ylabel('Cloud')
 
         grid on
         title(bands(i))
-        xlabel('M99 - 3C')
+        xlabel('Residual M99-3C [%]')
 
         set(gca,'FontName',fontName,'Fontsize',14)
     end

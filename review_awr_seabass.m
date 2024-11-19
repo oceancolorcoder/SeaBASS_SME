@@ -9,12 +9,13 @@
 %
 %   Thresholds provided by the set_thresholds function
 
+path(path,'./sub')
 wipe
 [fonts,projPath] = machine_prefs;
 %% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 0;
+ancillary.validation = 1;
 
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay';          % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023';    % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
@@ -24,12 +25,12 @@ ancillary.validation = 0;
 % ancillary.cruise = 'ArcticCC_Alakanuk_2022';
 % ancillary.cruise = 'ArcticCC_Alakanuk_2023';
 % ancillary.cruise = 'ArcticCC_Norton_Sound_2023';
-% ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240513';
-ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240612';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 
 ancillary.SBA = 0;
 

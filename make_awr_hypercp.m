@@ -8,6 +8,7 @@
 %
 % D. Aurin NASA/GSFC March 2024
 
+path(path,'./sub')
 wipe
 
 %% Setup

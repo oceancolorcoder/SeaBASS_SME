@@ -23,62 +23,53 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # cruise='CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs'
 # iFile=${projDir}'/20240404_kturner_CCNY_tzortziou_ARCTICCC_Norton_Sound_2023_AWRrrs.lis'
 
-
 # cruise='BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'
 # iFile=${projDir}'/20240524_kturner_CCNY_BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023_AWR.lis'
 # cruise='BIOSCAPE_COASTAL_CARBON_Walker_Bay_231108'
 # iFile=${projDir}'/20240524_kturner_CCNY_BIOSCAPE_COASTAL_CARBON_Walker_Bay_231108_AWR.lis'
 # cruise='BIOSCAPE_COASTAL_CARBON_Walker_Bay'
 # iFile=${projDir}'/20240524_kturner_CCNY_BIOSCAPE_COASTAL_CARBON_Walker_Bay_2023_AWR.lis'
-
 # cruise='Brewin_Superyacht_Science_2019-2020'
 # iFile=${projDir}'/bbrewin_Superyacht_science_2019-2020_HyperSAS_updated.lis'
 # cruise='Brewin_Superyacht_Science_2018'
 # iFile=${projDir}'/Brewin_Superyacht_Science_2018_HyperInSpace_Rrs_Es_updated.lis'
-
 # cruise='UMCES_Missouri_Reservoirs'
 # iFile=${projDir}'/20240202_UMCES_Missouri_Reservoirs_RSWQ__MO_RSWQ_2023_AWR.lis'
-
 # cruise='EXPORTSNP_NASA'
 # iFile=${projDir}'/daurin_EXPORTSNP_HyperSAS_updated.lis'
 # cruise='EXPORTSNA_NASA'
 # iFile=${projDir}'/20240313_NASA_GSFC_EXPORTS_EXPORTSNA_pySAS.lis'
 # cruise='EXPORTSNA_Boss'
 # iFile=${projDir}'/20240112_Boss_EXPORTS_EXPORTSNA_PySAS.lis'
-
 # cruise='Belgium_2021' ############ In water ###############
 # iFile=${projDir}'/Twardowski_AQUALOOKS_Belgium_2021_AOP_rrs_Lu_Ed.lis'
-
 # iFile=${projDir}'/Rivero-Calle_SeaHAWK_JackBlanton_20221031_Rrs.lis'
 # cruise='viirs_2019_foster'
-
 # iFile=${projDir}'/Mannino_VIIRS_validation_2019_foster.lis'
 # cruise='RSWQ_2023'
 # iFile=${projDir}'/20231115_silsbe_Missouri_Reservoirs_RSWQ_MO_RSWQ_2023_radiometry.lis'
-
 # cruise='VIIRS_VALIDATION_viirs_2021_gunter'
 # iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2021_gunter_R1.lis'
-
 # cruise='VIIRS_VALIDATION_viirs_2023_shimada'
 # iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2023_shimada_R1.lis'
-
 # cruise='VIIRS_VALIDATION_viirs_2022_sette'
 # iFile=${projDir}'/20240522_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2022_sette_R1.lis'
-
 # cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
 # iFile=${projDir}'/20240831_Mannino_KORUS_KR_2016_hypersas_AWR.lis'
-
 # cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
 # iFile=${projDir}'/20240923_Mannino_PVST_NORTHERN_INDIAN_OCEAN_EKAMSAT-2024-Bay-of-Bengal_awr.lis'
-
 # cruise='PVST_PRINGLS_PRINGLS_20240417'
 # iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240417_radiometry.lis'
-
 # cruise='PVST_PRINGLS_PRINGLS_20240513'
 # iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240513_radiometry.lis'
-
-cruise='PVST_PRINGLS_PRINGLS_20240612'
-iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240612_radiometry.lis'
+# cruise='PVST_PRINGLS_PRINGLS_20240612'
+# iFile=${projDir}'/20240921_Grunert_PVST_PRINGLS_PRINGLS_20240612_radiometry.lis'
+# cruise='VIIRS_VALIDATION_viirs_2022_sette'
+# iFile=${projDir}'/20240522_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2022_sette_R2.lis'
+# cruise='VIIRS_VALIDATION_viirs_2023_shimada'
+# iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2023_shimada_R2.lis'
+cruise='VIIRS_VALIDATION_viirs_2021_gunter'
+iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2021_gunter_R2.lis'
 
 
 echo 'Downloading for LIS file: ' $iFile

@@ -6,6 +6,7 @@
 %
 % D. Aurin NASA/GSFC March 2024
 
+path(path,'./sub')
 wipe
 % cruise = 'viirs_2019_foster';
 % cruise = 'RSWQ_2023'; % single spectrum per file
@@ -21,12 +22,12 @@ wipe
 % cruise = 'ArcticCC_Alakanuk_2022';
 % cruise = 'ArcticCC_Alakanuk_2023';
 % cruise = 'ArcticCC_Norton_Sound_2023';
-% cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240513';
-cruise = 'PVST_PRINGLS_PRINGLS_20240612';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 
 
 [fontName,projPath,imgPath] = machine_prefs();

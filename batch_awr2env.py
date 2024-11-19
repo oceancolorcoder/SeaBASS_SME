@@ -21,13 +21,14 @@ import awr2env_tall_thomas
 # cruise='Brewin_Superyacht_Science_2018'
 # cruise='BIOSCAPE_COASTAL_CARBON_Walker_Bay'
 # cruise='BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023'
-# cruise='VIIRS_VALIDATION_viirs_2021_gunter'
+cruise='VIIRS_VALIDATION_viirs_2021_gunter'
 # cruise='VIIRS_VALIDATION_viirs_2022_sette'
 # cruise='VIIRS_VALIDATION_viirs_2023_shimada'
 # cruise='KORUS_KR_2016_RV_Onnuri_HyperSAS'
 # cruise='NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal'
 # cruise='PVST_PRINGLS_PRINGLS_20240417'
-cruise='PVST_PRINGLS_PRINGLS_20240513'
+# cruise='PVST_PRINGLS_PRINGLS_20240513'
+# cruise='PVST_PRINGLS_PRINGLS_20240612'
 
 tall_thomas = False
 

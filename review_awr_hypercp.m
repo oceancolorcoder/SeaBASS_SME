@@ -7,6 +7,7 @@
 %
 % D. Aurin NASA/GSFC July 2024
 
+path(path,'./sub')
 wipe
 [fonts,projPath] = machine_prefs;
 %% Manual Setup
