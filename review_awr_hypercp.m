@@ -2,12 +2,29 @@
 % Add AVW and QWIP if not already included in Derived Products
 % Display spectral (ir)radiance and reflectance with ancillary data
 % dashboard
-
+%
 % Screen on QWIP,RelAz,Wind,SZA, and visual inspection
 %
-% D. Aurin NASA/GSFC July 2024
+%   NOTE: See ./sub/set_thresholds.m for QC thresholds and citations
+%
+%   Inputs:
+%       dat/[cruisename].mat from make_awr_hypercp.m (SASData structure)
+%
+%   Outputs:
+%       dat/[cruisename]_flags.mat (select variables and QA/QC flags)
+%       plt/[cruisename]_AllSpec.png (Rrs, Es, Li, Lw with flags shown)
+%       plt/[cruisename]_QWIP.png
+%       plt/[cruisename]_QWIP_Hist.png
+%       plt/[cruisename]_timeline.png (time series of select variables used
+%       in QAQC)
+%       dat/[cruisename]_all_flags.mat
+%       dat/[cruisename]_flags.mat
+%       dat/[cruisename]_all_flags.csv
+%       dat/[cruisename]_flags.csv
+%
+% D. Aurin NASA/GSFC November 2024
 
-path(path,'./sub')
+% path(path,'./sub') % <-- uncomment if you are not me
 wipe
 [fonts,projPath] = machine_prefs;
 %% Manual Setup

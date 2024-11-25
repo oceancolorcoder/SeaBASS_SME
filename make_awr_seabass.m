@@ -1,13 +1,22 @@
 % Using readsb.m (in MATLAB_embedded, updated No 2023), pull in all the
 % files obtained using run_get_files.bsh.
+% 
+% Inputs:
+%        cruisename
+%        SeaBASS files from .lis and run_get_files.bsh
 %
 % Output:
 %   dBase structure with relevant fields (e.g., datetime, Rrs, etc.)
 %
-% D. Aurin NASA/GSFC March 2024
+% D. Aurin NASA/GSFC November 2024
 
-path(path,'./sub')
+path(path,'./sub')          % <-- uncomment if you are not me
 wipe
+%% Setup
+
+% Cruise Name
+%   The folder of SeaBASS files:
+
 % cruise = 'viirs_2019_foster';
 % cruise = 'RSWQ_2023'; % single spectrum per file
 % cruise = 'JackBlanton'; % Rivero-Calle; returned to PI
@@ -22,32 +31,42 @@ wipe
 % cruise = 'ArcticCC_Alakanuk_2022';
 % cruise = 'ArcticCC_Alakanuk_2023';
 % cruise = 'ArcticCC_Norton_Sound_2023';
-cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+% cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240513';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240612';
+cruise = 'NF2405_VIIRS';
 
+[fontName,projPath,imgPath] = machine_prefs();                      % <-- Set this
+projPath = ...
+    fullfile(projPath,'HyperPACE','field_data','DALEC',cruise,'L2','SeaBass'); % <-- Set this
+% projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
 
-[fontName,projPath,imgPath] = machine_prefs();
-projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
+% Use ls /path/path/*.sb > filelist.txt (full path filename list)
+fid = fopen(fullfile(projPath,'filelist.txt')); % <-- Full path list of seabass files (JIRA)
 
-fid = fopen(fullfile(projPath,'filelist.txt'));
+% Es and Rrs as seperate files
+EsAndRrs = 1;                   % <--- Set to zero for either/or, 1 for both
+
+%%
 fileList = textscan(fid,'%s\n');
 fclose(fid);
 
 dBase = struct();
 
-j=0;
+j=0;    % Allows for multiple seabass files with datetime rows ("wide" files)
 for i=1:length(fileList{1})
     fp = fileList{1}{i};
     if ~contains(fp,'tgz')
         [data, sbHeader, headerArray, dataArray] = readsb(fp,'MakeStructure', true);
         fNames = fieldnames(data);
+        missing = extractfield(sbHeader,'missing');
 
         % Need to determine the organization of the data
-        if sum(strcmpi(fNames,'wavelength')) ~= 0
+        if isfield(data,'wavelength')
+            %%          Tall File
             disp('Found wavelength column. Single spectrum "Tall" file')
             % datenum is repeated
             dBase(i).datetime = datetime(data.datenum(1),'ConvertFrom','datenum','TimeZone','UTC');
@@ -58,7 +77,7 @@ for i=1:length(fileList{1})
             dBase(i).wind = extractfield(sbHeader,'wind_speed');
             dBase(i).water_depth = extractfield(sbHeader,'water_depth');
             dBase(i).wave_height = extractfield(sbHeader,'wave_height');
-            
+
             if isfield(sbHeader,'rho_correction')
                 dBase(i).rho_correction = extractfield(sbHeader,'rho_correction');
             end
@@ -71,15 +90,27 @@ for i=1:length(fileList{1})
 
             dBase(i).wavelength = data.wavelength';
             dBase(i).rrs = data.rrs';
-            dBase(i).rrs_sd = data.rrs_sd';
+            if isfield(sbHeader,'rrs_sd')
+                dBase(i).rrs_sd = data.rrs_sd';
+            elseif isfield(sbHeader,'rrs_unc')
+                dBase(i).rrs_unc = data.rrs_unc';
+            end
 
             % Es and Ed terms are assumed equivalent (Es = Ed(0+))
             if isfield(data,'es')
                 dBase(i).es = data.es';
-                dBase(i).es_sd = data.es_sd';
+                if isfield(sbHeader,'es_sd')
+                    dBase(i).es_sd = data.es_sd';
+                elseif isfield(sbHeader,'es_unc')
+                    dBase(i).es_unc = data.es_unc';
+                end
             elseif isfield(data,'ed')
-                dBase(i).es = data.ed';
-                dBase(i).es_sd = data.ed_sd';
+                dBase(i).es = data.ed'; % Change ed to es
+                if isfield(sbHeader,'ed_sd')
+                    dBase(i).es_sd = data.ed_sd';
+                elseif isfield(sbHeader,'ed_unc')
+                    dBase(i).es_unc = data.ed_unc';
+                end
             end
             % Lref for handhelds is the plaque radiance. Check their
             % equation for Es in their notes (e.g. Es = Lref*pi*(1/0.99),
@@ -102,49 +133,95 @@ for i=1:length(fileList{1})
                 dBase(i).lt_sd = data.lt_sd';
             end
 
-
-            missing = extractfield(sbHeader,'missing');
-
-        else
-            if sum(strcmpi(fNames,'time')) ~= 0
-                disp('Rows organized by time')
-                if j==0
-                    dBase(1).datetime = datetime(now,'ConvertFrom','datenum','TimeZone','UTC');
+        elseif isfield(data,'time')
+            %%          Wide File
+            disp('Rows organized by time. "Wide" file.')
+            % This section is in early development and may not support all
+            % wide submissions (e.g., unexpected fields).
+            
+            for n=1:length(data.time)                
+                j=j+1; % Allows for multiple files with datetime rows
+                dBase(j).datetime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');
+                dBase(j).latitude = data.lat(n);
+                dBase(j).longitude = data.lon(n);
+                if isfield(data,'station')
+                    dBase(j).station = data.station(n);
+                else
+                    dBase(j).station = extractfield(sbHeader,'station');
                 end
-                % For HyperInSPACE output, this will require matching Es to
-                % Rrs from seperate files
-                for n=1:length(data.time)
-                    % Check for existing matching time in dBase
-                    newDateTime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');
-                    [x,y] = find_nearest(newDateTime,[dBase.datetime]);
-                    if x ~= newDateTime
-                        j=j+1;
-                        dBase(j).datetime = datetime(data.datenum(n),'ConvertFrom','datenum','TimeZone','UTC');
-                        dBase(j).latitude = datetime(data.latitude(n));
-                        dBase(j).latitude = datetime(data.latitude(n));
-                        dBase(i).station = extractfield(sbHeader,'station');
-                        % dBase(i).cloud = extractfield(sbHeader,'cloud_percent');
-                        dBase(i).cloud = data.cloud(n);
-                        % dBase(i).wind = extractfield(sbHeader,'wind_speed');
-                        dBase(i).wind = data.wind(n);
-                        dBase(i).water_depth = extractfield(sbHeader,'water_depth');
-                        dBase(i).wave_height = extractfield(sbHeader,'wave_height');
-                        dBase(i).relAz = data.relAz(n);
-                        dBase(i).sza = data.sza(n);
-                        dBase(i).aot = data.aot(n);
+                if isfield(data,'cloud')                
+                    dBase(j).cloud = data.cloud(n);
+                else
+                    dBase(j).cloud = extractfield(sbHeader,'cloud_percent');
+                end                
+                if isfield(data,'wind')
+                    dBase(j).wind = data.wind(n);
+                else
+                    dBase(j).wind = extractfield(sbHeader,'wind_speed');
+                end
+                dBase(j).water_depth = extractfield(sbHeader,'water_depth');
+                if isfield(data,'waveht')
+                    dBase(j).wave_height = data.waveht(n);
+                else
+                    dBase(j).wave_height = extractfield(sbHeader,'wave_height');
+                end
+                if isfield(data,'relaz')
+                    dBase(j).relAz = data.relaz(n);
+                else
+                    dBase(j).relAz = extractfield(sbHeader,'relaz');
+                end
+                if isfield(data,'sza')
+                    dBase(j).sza = data.sza(n);
+                else
+                    dBase(j).sza = extractfield(sbHeader,'sza');
+                end                
+                if isfield(data,'aot')
+                    dBase(j).aot = data.aot(n);
+                end
 
+                % Spectral fields
+                specFieldNames = {'rrs','ed','es','li','lt','lu','lw','rrs','lwn'};
+                for s=1:length(specFieldNames)
+                    sName = specFieldNames{s};
 
+                    specCols = contains(fNames,sName,'IgnoreCase',true);
+                    if any(specCols)                        
+                        specUncCols = ...
+                            ~cellfun(@isempty,regexp(fNames,regexptranslate('wildcard', sprintf('%s*_unc',sName)))) |...
+                            ~cellfun(@isempty,regexp(fNames,regexptranslate('wildcard', sprintf('%s*_sd',sName))));
 
-                    else
-                        dBase(y).dataXXX = XXX;
+                        dataCell = struct2cell(data);
+                        specCols = specCols & ~specUncCols;
+                        
+                        spec = horzcat(dataCell{specCols});
+                        dBase(j).(sName) = spec(n,:);
+                        
+                        % Capture wavebands from header
+                        wvFieldName = sprintf('%s_wavelength',sName);
+                        dBase(j).(wvFieldName) = sbHeader.wavelength_lists.(sName);
+                        
+                        if any(specUncCols)
+                            specUnc = horzcat(dataCell{specUncCols});
+                            if strcmpi(sName,'rrs') ||strcmpi(sName,'lw') ||strcmpi(sName,'lwn')
+                                % These !should! be uncertainties, not
+                                % simple stds
+                                fName = sprintf('%s_unc',sName);
+                                dBase(j).(fName) = specUnc(n,:);
+                            else
+                                fName = sprintf('%s_sd',sName);
+                                dBase(j).(fName) = specUnc(n,:);
+                            end
+                        end
                     end
                 end
+
+
             end
         end
     end
 end
 
-% Nan out the nans
+% Nan out the missing values
 fNames = fieldnames(dBase);
 for col=1:length(fNames)
     dims = size(dBase(1).(fNames{col}));
@@ -152,8 +229,8 @@ for col=1:length(fNames)
         test = [dBase.(fNames{col})];
         if isa(test,'double')
             test(test == missing) = nan;
-            test = num2cell(test); % Ack!
-            [dBase.(fNames{col})] = test{:}; % Ack!
+            test = num2cell(test); 
+            [dBase.(fNames{col})] = test{:}; 
         end
     else
         for row=1:size(dBase,2)
@@ -168,6 +245,29 @@ end
 T = struct2table(dBase);
 sortedT = sortrows(T,'datetime');
 dBase = table2struct(sortedT);
+
+% Merge Es and Rrs into common dBase
+if EsAndRrs
+    whrRrs = find(~cellfun(@isempty,{dBase.rrs}));
+    whrEs = find(~cellfun(@isempty,{dBase.es}));
+    dBaseEs = dBase(whrEs);
+    EsDateTime = [dBaseEs.datetime];
+    for i=1:length(whrRrs)
+        dBaseMerge(i) = dBase(whrRrs(i));
+        dateTime1 = dBaseMerge(i).datetime;
+        % Expects an exact match in timestamp
+        match = find(dateTime1 == EsDateTime);
+        dBaseMerge(i).es = dBaseEs(match).es;
+        dBaseMerge(i).es_wavelength = dBaseEs(match).es_wavelength;
+        if any(contains(fieldnames(dBase),'es_sd'))
+            dBaseMerge(i).es_sd = dBaseEs(match).es_sd;
+        elseif any(contains(fieldnames(dBase),'es_unc'))
+            dBaseMerge(i).es_unc = dBaseEs(match).es_unc;
+        end
+
+    end
+    dBase = dBaseMerge;
+end
 
 save(['dat/' cruise],'dBase')
 

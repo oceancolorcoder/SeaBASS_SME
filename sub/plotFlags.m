@@ -24,7 +24,7 @@ end
 flagSpectra(handles.ax12,AWR.wave,AWR.es,flags,0)
 ylabel('E_s [\muW cm^{-2} nm^{-1}]')
 
-if ~ancillary.SBA
+if ~ancillary.SBA && ~ancillary.skipLi
     handles.ax13 = nexttile;
     plot(AWR.wave,AWR.li,'k')
     hold on
@@ -81,7 +81,11 @@ if ~ancillary.SBA
     gud = ~flags.RelAz & ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');
     set([th0 th1 th2 th3 th4 th5 th6 th7 handles.th8],'FontName',fontName,'fontsize',12)
+    if ~ancillary.skipLi
     set([handles.ax11 handles.ax12 handles.ax13 handles.ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+    else
+        set([handles.ax11 handles.ax12 handles.ax14],'FontName',fontName,'FontSize',16, 'xgrid','on', 'ygrid','on')
+    end
 else
     gud = ~flags.Wind & ~flags.SZA & ~flags.QWIP & ~flags.Cloud; %& ~flags.QA
     handles.th8 = text(0.70,0.55,sprintf('Remaining: %d of %d',sum(gud),AWR.nSpectra),'Units','normalized');

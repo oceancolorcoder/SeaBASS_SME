@@ -91,7 +91,7 @@ end
 
 flagSpectra(handles.ax11,AWR.wave,AWR.rrs,flags,1)
 flagSpectra(handles.ax12,AWR.wave,AWR.es,flags,0)
-if ~ancillary.SBA
+if ~ancillary.SBA && ~ancillary.skipLi
     flagSpectra(handles.ax13,AWR.wave,AWR.li,flags,0)
 end
 

@@ -5,17 +5,34 @@
 
 % Screen on QWIP,RelAz,Wind,SZA, and visual inspection
 %
-% D. Aurin NASA/GSFC June 2024
+%   NOTE: See ./sub/set_thresholds.m for QC thresholds and citations
+%
+%   Inputs:
+%       dat/[cruisename].mat from make_awr_hypercp.m (SASData structure)
+%
+%   Outputs:
+%       dat/[cruisename]_flags.mat (select variables and QA/QC flags)
+%       plt/[cruisename]_AllSpec.png (Rrs, Es, Li, Lw with flags shown)
+%       plt/[cruisename]_QWIP.png
+%       plt/[cruisename]_QWIP_Hist.png
+%       plt/[cruisename]_timeline.png (time series of select variables used
+%       in QAQC)
+%       dat/[cruisename]_all_flags.mat
+%       dat/[cruisename]_flags.mat
+%       dat/[cruisename]_all_flags.csv
+%       dat/[cruisename]_flags.csv
+%
+% D. Aurin NASA/GSFC November 2024
 %
 %   Thresholds provided by the set_thresholds function
 
-path(path,'./sub')
+% path(path,'./sub') % <-- uncomment if you are not me
 wipe
-[fonts,projPath] = machine_prefs;
+[fonts,projPath] = machine_prefs;   % <-- Set this
 %% Manual Setup
 
-% Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
+% Set to true (1) unless building .env.all for NOMAD/SeaBASS (0)
+ancillary.validation = 0;
 
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay';          % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023';    % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
@@ -25,19 +42,23 @@ ancillary.validation = 1;
 % ancillary.cruise = 'ArcticCC_Alakanuk_2022';
 % ancillary.cruise = 'ArcticCC_Alakanuk_2023';
 % ancillary.cruise = 'ArcticCC_Norton_Sound_2023';
-ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
+% ancillary.cruise = 'VIIRS_VALIDATION_viirs_2021_gunter';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2022_sette';
 % ancillary.cruise = 'VIIRS_VALIDATION_viirs_2023_shimada';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240513';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240612';
-
-ancillary.SBA = 0;
-
-% relAz = (135+90)/2;   % Not provided per cast, but in this range
-% relAz = 90;             % Not provided per cast, but reported as about +/-90
 % ancillary.cruise = 'UMCES_Missouri_Reservoirs';
-% ancillary.SBA = 1;
+ancillary.cruise = 'NF2405_VIIRS';
+
+SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise); % <-- Set this; used to write plots
+
+ancillary.SBA = 0;                                          % <-- Set this (1 for SBA)
+ancillary.skipLi = 1;                 % Used for cloud index. May not be available, even for non-SBA
+
+% relAz = 90;               % If not provided per cast, but reported as +/-90   % <-- Check this
+% relAz = 135;              % If not provided per cast, but reported as +/-135
+% relAz = (135+90)/2;       % If not provided per cast, but in this range; Bad choice...     
 
 clobber = 1;                % Re-evaluate thresholds and save over old
 plotQWIP = 1;               % Plot QWIP (x2)
@@ -46,7 +67,6 @@ manualSelection = 1;        % Manually select/flag additional spectra
 
 %% Auto Setup
 thresholds = set_thresholds(ancillary.validation);
-SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise);
 plotPath = fullfile(SMEPath,'Plots');
 if ~isfolder(plotPath)
     mkdir(plotPath)
@@ -58,7 +78,12 @@ if clobber
     AWR.dateTime = [dBase.datetime];
     AWR.nSpectra = length(dBase);
 
-    AWR.wave = dBase(1).wavelength;
+    try
+        AWR.wave = dBase(1).wavelength;
+    catch
+        AWR.wave = dBase(1).rrs_wavelength;
+    end
+    
     AWR.wave_sd = min(AWR.wave):20:max(AWR.wave); % Subset for errorbars
     try
         % Potential of wave mismatch depending on glint processing
@@ -98,7 +123,7 @@ if clobber
     else
         ancillary.cloud = nan(1,AWR.nSpectra);
     end
-    if ~ancillary.SBA
+    if ~ancillary.SBA && ~ancillary.skipLi
         if ~isfield(AWR,'li')
             disp('****Check that this is not SBA****')
             return
@@ -133,6 +158,8 @@ if clobber
     end
     if isfield(dBase,'relaz')
         ancillary.relAz = [dBase.relaz];
+    elseif isfield(dBase,'relAz')
+        ancillary.relAz = [dBase.relAz];
     else
         if ~ancillary.SBA
             if exist('relAz','var')
@@ -206,74 +233,14 @@ for namei=1:length(dBaseFields)
     end
 end
 
-% 
-% if isfield(dBase,'rrs_sd')
-%     rrs_sd = vertcat(dBase.rrs_sd);
-%     % Reduce resolution for clarity
-%     AWR.rrs_sub = interp1(AWR.wave,AWR.rrs',AWR.wave_sd)';
-%     AWR.rrs_sd = interp1(AWR.wave,rrs_sd',AWR.wave_sd)';
-% elseif isfield(dBase,'rrs_unc')
-%     % Note we are re-using _sd in the variable for uncertainty
-%     % (just for plots)
-%     rrs_sd = vertcat(dBase.rrs_unc);
-%     AWR.rrs_sub = interp1(AWR.wave,AWR.rrs',AWR.wave_sd)';
-%     AWR.rrs_sd = interp1(AWR.wave,rrs_sd',AWR.wave_sd)';
-% end
-% if isfield(dBase,'es_sd')
-%     es_sd = vertcat(dBase.es_sd);
-%     % Reduce resolution for clarity
-%     AWR.es_sub = interp1(AWR.wave,AWR.es',AWR.wave_sd)';
-%     AWR.es_sd = interp1(AWR.wave,es_sd',AWR.wave_sd)';
-% elseif isfield(dBase,'es_unc')
-%     % Note we are re-using _sd in the variable for uncertainty
-%     % (just for plots)
-%     es_sd = vertcat(dBase.es_unc);
-%     AWR.es_sub = interp1(AWR.wave,AWR.es',AWR.wave_sd)';
-%     AWR.es_sd = interp1(AWR.wave,es_sd',AWR.wave_sd)';
-% end
-% if isfield(dBase,'lt_sd')
-%     lt_sd = vertcat(dBase.lt_sd);
-%     % Reduce resolution for clarity
-%     AWR.lt_sub = interp1(AWR.wave,AWR.lt',AWR.wave_sd)';
-%     AWR.lt_sd = interp1(AWR.wave,lt_sd',AWR.wave_sd)';
-% elseif isfield(dBase,'lt_unc')
-%     % Note we are re-using _sd in the variable for uncertainty
-%     % (just for plots)
-%     lt_sd = vertcat(dBase.lt_unc);
-%     AWR.lt_sub = interp1(AWR.wave,AWR.lt',AWR.wave_sd)';
-%     AWR.lt_sd = interp1(AWR.wave,lt_sd',AWR.wave_sd)';
-% end
-% if isfield(dBase,'lw_sd')
-%     lw_sd = vertcat(dBase.lw_sd);
-%     % Reduce resolution for clarity
-%     AWR.lw_sub = interp1(AWR.wave,AWR.lw',AWR.wave_sd)';
-%     AWR.lw_sd = interp1(AWR.wave,lw_sd',AWR.wave_sd)';
-% elseif isfield(dBase,'lw_unc')
-%     % Note we are re-using _sd in the variable for uncertainty
-%     % (just for plots)
-%     lw_sd = vertcat(dBase.lw_unc);
-%     AWR.lw_sub = interp1(AWR.wave,AWR.lw',AWR.wave_sd)';
-%     AWR.lw_sd = interp1(AWR.wave,lw_sd',AWR.wave_sd)';
-% end
-% if isfield(dBase,'li_sd')
-%     li_sd = vertcat(dBase.li_sd);
-%     % Reduce resolution for clarity
-%     AWR.li_sub = interp1(AWR.wave,AWR.li',AWR.wave_sd)';
-%     AWR.li_sd = interp1(AWR.wave,li_sd',AWR.wave_sd)';
-% elseif isfield(dBase,'li_unc')
-%     % Note we are re-using _sd in the variable for uncertainty
-%     % (just for plots)
-%     li_sd = vertcat(dBase.li_unc);
-%     AWR.li_sub = interp1(AWR.wave,AWR.li',AWR.wave_sd)';
-%     AWR.li_sd = interp1(AWR.wave,li_sd',AWR.wave_sd)';
-% end
-
 end
 
 %%
 function AWR = interpFun(AWR,dBase)
 % Automatically interpolates all to the first wavelength in dBase, if
 % necessary
+
+disp('Interpolating spectral results with differing wavebands')
 
 wavelength = AWR.wave;
 gudFields = ["rrs" "rrs_unc" "rrs_sd" "es" "es_unc" "es_sd" "lw" "lw_unc" "lw_sd" "lt" "lt_unc" "lt_sd" "li" "li_sd" "li_unc"];
@@ -285,19 +252,30 @@ for namei=1:length(dBaseFields)
 
         % Row-by-row interpolation
         for i=length(dBase):-1:1  
-            % For uncertainty fields, interpolated to course spectral resolution
+            try
+                test = length(dBase(i).wavelength) ~= length(wavelength);
+                waveOther = dBase(i).wavelength;
+            catch
+                fieldNameWv = sprintf('%s_wavelength',fieldName);
+                fieldNameWv = strrep(fieldNameWv,'_sd_','_');
+                fieldNameWv = strrep(fieldNameWv,'_unc_','_');
+                test = length(dBase(i).(fieldNameWv)) ~= length(wavelength);
+                waveOther = dBase(i).(fieldNameWv);
+            end
+            % For uncertainty fields, interpolated to coarse spectral resolution
             if contains(fieldName,"_unc") || contains(fieldName,"_sd")        
-                AWR.(fieldName)(i,:) = interp1(dBase(i).wavelength, dBase(i).(fieldName), AWR.wave_sd);
+                AWR.(fieldName)(i,:) = interp1(waveOther, dBase(i).(fieldName), AWR.wave_sd);
             else
                 % Otherwise full resolution
-                if length(dBase(i).wavelength) ~= length(wavelength)
-                    AWR.(fieldName)(i,:) = interp1(dBase(i).wavelength, dBase(i).(fieldName), wavelength);
+                
+                if test
+                    AWR.(fieldName)(i,:) = interp1(waveOther, dBase(i).(fieldName), wavelength);
                 else
                     AWR.(fieldName)(i,:) = dBase(i).(fieldName);
                 end
                 % And add a low resolution version for errorbar plots
                 subField = [fieldName '_sub'];
-                AWR.(subField)(i,:) = interp1(dBase(i).wavelength, dBase(i).(fieldName), AWR.wave_sd);
+                AWR.(subField)(i,:) = interp1(waveOther, dBase(i).(fieldName), AWR.wave_sd);
             end
 
         end

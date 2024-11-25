@@ -6,9 +6,9 @@
 % Ancillary structure.
 % Files obtained using run_get_files.bsh
 %
-% D. Aurin NASA/GSFC March 2024
+% D. Aurin NASA/GSFC November 2024
 
-path(path,'./sub')
+% path(path,'./sub') % <-- uncomment if you are not me
 wipe
 
 %% Setup

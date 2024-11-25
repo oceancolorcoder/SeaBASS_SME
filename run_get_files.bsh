@@ -75,6 +75,7 @@ iFile=${projDir}'/20240529_agilerson_CCNY_Gilerson_VIIRS_VALIDATION_viirs_2021_g
 echo 'Downloading for LIS file: ' $iFile
 ####################
 
+# python ./sub/get_files.py --ifile=$iFile
 python /Users/daurin/GitRepos/sbanalyst/get_files.py --ifile=$iFile
 
 # Make a folder and move new data
