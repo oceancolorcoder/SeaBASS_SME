@@ -49,12 +49,15 @@ ancillary.validation = 0;
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240513';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240612';
 % ancillary.cruise = 'UMCES_Missouri_Reservoirs';
-ancillary.cruise = 'NF2405_VIIRS';
+% ancillary.cruise = 'NF2405_VIIRS';
+% ancillary.cruise = 'CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240717';
+ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240813';
 
 SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise); % <-- Set this; used to write plots
 
 ancillary.SBA = 0;                                          % <-- Set this (1 for SBA)
-ancillary.skipLi = 1;                 % Used for cloud index. May not be available, even for non-SBA
+ancillary.skipLi = 0;                 % Used for cloud index. May not be available, even for non-SBA
 
 % relAz = 90;               % If not provided per cast, but reported as +/-90   % <-- Check this
 % relAz = 135;              % If not provided per cast, but reported as +/-135
@@ -174,7 +177,7 @@ else
     AWR.nSpectra = length(AWR.rrs); % check this
 end
 
-%% Show spectra with filtered data
+%% Show spectra and timeline with filtered data
 if plotTimelineSpectra
     
     % Figures 3 (spectral) & 4 (timeline)

@@ -10,10 +10,11 @@
 % D. Aurin NASA/GSFC November 2024
 
 wipe
-fontName = machine_prefs;
+[fontName,projPath] = machine_prefs;
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240513';
-cruise = 'PVST_PRINGLS_PRINGLS_20240612';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240612';
+cruise = 'PVST_PRINGLS_PRINGLS_20240717';
 
 load(sprintf('dat/%s.mat',cruise)) % dBase from make_awr_seabass.m
 
@@ -28,8 +29,11 @@ M99 = dBase(M99ind);
 
 plotSpec = 0;
 plotScat = 0;
-plotBA = 0;
+plotBA = 1;
 plotMet = 1;
+
+SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',cruise);
+plotPath = fullfile(SMEPath,'Plots');
 
 %% Spectral
 if plotSpec
@@ -50,7 +54,7 @@ if plotSpec
     ylabel('R_{rs} [sr^{-1}]','FontName',fontName,'Fontsize',14)
     legend([ph1 ph2],'3C','M99','Fontsize',18)
     set(gca,'position',[0.1300    0.1100    0.7750    0.8150],'FontName',fontName,'Fontsize',14)
-    exportgraphics(fh1,sprintf('plt/3C_M99_spectral_%s.png',cruise))
+    exportgraphics(fh1,sprintf('%s/3C_M99_spectral_%s.png',plotPath,cruise))
 end
 
 %% Scatter
@@ -73,7 +77,7 @@ if plotScat
         set(gca,'FontName',fontName,'Fontsize',14)
     end
     set(gcf,'Position',[1841         205         826         715])
-    exportgraphics(fh2,sprintf('plt/3C_M99_scatter_%s.png',cruise))
+    exportgraphics(fh2,sprintf('%s/3C_M99_scatter_%s.png',plotPath,cruise))
 end
 close all
 
@@ -84,7 +88,7 @@ if plotBA
         % subplot(3,2,i)
         names = {sprintf('3C %d',bands(i)),sprintf('M99 %d',bands(i))};
         [rpc fh3] = BlandAltman(rrs3C(:,ind),rrsM99(:,ind),names);%,'.','MarkerSize',14,'Color','r')
-        exportgraphics(fh3,sprintf('plt/3C_M99_BA_%d_%s.png',bands(i),cruise))
+        exportgraphics(fh3,sprintf('%s/3C_M99_BA_%d_%s.png',plotPath,bands(i),cruise))
         close
     end
 end
@@ -121,7 +125,7 @@ if plotMet
         set(gca,'FontName',fontName,'Fontsize',14)
     end
     set(gcf,'Position',[1841         205         826         715])
-    exportgraphics(fh4,sprintf('plt/3C_M99_wind_cloud_%s.png',cruise))
+    exportgraphics(fh4,sprintf('%s/3C_M99_wind_cloud_%s.png',plotPath,cruise))
 end
 
 

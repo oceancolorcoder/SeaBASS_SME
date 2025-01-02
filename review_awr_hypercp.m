@@ -31,7 +31,8 @@ wipe
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
 ancillary.validation = 1;
-ancillary.cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
+ancillary.cruise = 'PACE-PAX_PACE-PAX';
+% ancillary.cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
 % ancillary.cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
 % ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % ancillary.cruise = 'EXPORTSNA_NASA';
@@ -43,6 +44,8 @@ clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)
 plotTimelineSpectra = 1;  % Plot timeline and spectral plot of flagged spectra
 manualSelection = 1;    % Manually select/flag additional spectra
+
+ancillary.skipLi = 0; % Should always be 0 for HyperCP
 
 %% Auto Setup
 thresholds = set_thresholds(ancillary.validation);

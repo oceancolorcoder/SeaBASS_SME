@@ -12,7 +12,8 @@
 wipe
 
 %% Setup
-cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
+cruise = 'PACE-PAX_PACE-PAX';
+% cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
 % cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
 % cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
 % cruise = 'Brewin_Superyacht_Science_2018';
@@ -39,8 +40,8 @@ ensemble = 0;
 for i=1:length(SASlist)
     fpf = [SASDir filesep SASlist(i).name];
 
-    % Ignore station data for now
-    if ~contains(fpf,'station','ignorecase',true)
+    % % Ignore station data for now
+    % if ~contains(fpf,'station','ignorecase',true)
         disp(['Loading: ', fpf])
         filename = SASlist(i).name;
 
@@ -255,11 +256,12 @@ for i=1:length(SASlist)
                         % For spectral data
                         eval(sprintf('%s(ensemble).%s = wavedata(iens,:);',...
                             Groups(igrp).Name(2:end),Datasets(ids).Name))
-                        if isempty(strfind(Datasets(ids).Name,'_unc')) && isempty(strfind(Datasets(ids).Name,'_uncorr')) ...
-                                && isempty(strfind(Datasets(ids).Name,'_sd'))...
-                                && isempty(strfind(Datasets(ids).Name,'_N')) && isempty(strfind(Datasets(ids).Name,'nir_')) ...
-                                && isempty(strfind(Datasets(ids).Name,'rho_'))
-                            % && isempty(strfind(Datasets(ids).Name,'_median')) && isempty(strfind(Datasets(ids).Name,'_sd'))...
+                        if isempty(strfind(Datasets(ids).Name,'_unc')) && ...
+                                isempty(strfind(Datasets(ids).Name,'_uncorr')) &&...
+                                isempty(strfind(Datasets(ids).Name,'_sd')) && ...
+                                isempty(strfind(Datasets(ids).Name,'_N')) && ...
+                                isempty(strfind(Datasets(ids).Name,'nir_')) &&...
+                                isempty(strfind(Datasets(ids).Name,'rho_'))
 
                             eval(sprintf('%s(ensemble).%s_wavelength = wavelength;',...
                                 Groups(igrp).Name(2:end),Datasets(ids).Name))
@@ -279,7 +281,7 @@ for i=1:length(SASlist)
 
             end
         end
-    end
+    % end %ignore stations
     fprintf(' Cruise running Total: %d ensembles\n', size(ANCILLARY,2))
 end
 

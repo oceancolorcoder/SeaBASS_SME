@@ -10,7 +10,7 @@
 %
 % D. Aurin NASA/GSFC November 2024
 
-path(path,'./sub')          % <-- uncomment if you are not me
+% path(path,'./sub')          % <-- uncomment if you are not me
 wipe
 %% Setup
 
@@ -37,18 +37,27 @@ wipe
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240513';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240612';
-cruise = 'NF2405_VIIRS';
+% cruise = 'NF2405_VIIRS';
+% cruise = 'CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240717';
+cruise = 'PVST_PRINGLS_PRINGLS_20240813';
 
 [fontName,projPath,imgPath] = machine_prefs();                      % <-- Set this
-projPath = ...
-    fullfile(projPath,'HyperPACE','field_data','DALEC',cruise,'L2','SeaBass'); % <-- Set this
-% projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
+projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
+% projPath = ...
+% fullfile(projPath,'HyperPACE','field_data','DALEC',cruise,'L2','SeaBass');
+
+if ~isfolder(projPath)
+    fprintf('Bad project path: %s\n',projPath)
+    return
+end
+
 
 % Use ls /path/path/*.sb > filelist.txt (full path filename list)
 fid = fopen(fullfile(projPath,'filelist.txt')); % <-- Full path list of seabass files (JIRA)
 
-% Es and Rrs as seperate files
-EsAndRrs = 1;                   % <--- Set to zero for either/or, 1 for both
+% Es and Rrs as separate SeaBASS files
+EsAndRrs = 0;                   % <--- Set to zero combined seabass files, 1 for separate Es and Rrs
 
 %%
 fileList = textscan(fid,'%s\n');
@@ -90,25 +99,25 @@ for i=1:length(fileList{1})
 
             dBase(i).wavelength = data.wavelength';
             dBase(i).rrs = data.rrs';
-            if isfield(sbHeader,'rrs_sd')
+            if isfield(data,'rrs_sd')
                 dBase(i).rrs_sd = data.rrs_sd';
-            elseif isfield(sbHeader,'rrs_unc')
+            elseif isfield(data,'rrs_unc')
                 dBase(i).rrs_unc = data.rrs_unc';
             end
 
             % Es and Ed terms are assumed equivalent (Es = Ed(0+))
             if isfield(data,'es')
                 dBase(i).es = data.es';
-                if isfield(sbHeader,'es_sd')
+                if isfield(data,'es_sd')
                     dBase(i).es_sd = data.es_sd';
-                elseif isfield(sbHeader,'es_unc')
+                elseif isfield(data,'es_unc')
                     dBase(i).es_unc = data.es_unc';
                 end
             elseif isfield(data,'ed')
                 dBase(i).es = data.ed'; % Change ed to es
-                if isfield(sbHeader,'ed_sd')
+                if isfield(data,'ed_sd')
                     dBase(i).es_sd = data.ed_sd';
-                elseif isfield(sbHeader,'ed_unc')
+                elseif isfield(data,'ed_unc')
                     dBase(i).es_unc = data.ed_unc';
                 end
             end
