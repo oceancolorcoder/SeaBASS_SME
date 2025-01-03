@@ -32,7 +32,7 @@ wipe
 %% Manual Setup
 
 % Set to true (1) unless building .env.all for NOMAD/SeaBASS (0)
-ancillary.validation = 0;
+ancillary.validation = 1;
 
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_Walker_Bay';          % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
 % ancillary.cruise = 'BIOSCAPE_COASTAL_CARBON_St_Helena_Bay_2023';    % Kyle Turner/Maria Tzortziou, BIOSCAPE (S. Africa)
@@ -53,6 +53,8 @@ ancillary.validation = 0;
 % ancillary.cruise = 'CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240717';
 ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240813';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20241003';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240911';
 
 SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise); % <-- Set this; used to write plots
 

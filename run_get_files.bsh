@@ -74,10 +74,12 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # iFile=${projDir}'/20241102_Gilerson_CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022_AWR_handheld_R1.lis'
 # cruise='PVST_PRINGLS_PRINGLS_20240717'
 # iFile=${projDir}'/20241120_Grunert_PVST_PRINGLS_PRINGLS_20240717_AWR.lis'
-cruise='PVST_PRINGLS_PRINGLS_20240813'
-iFile=${projDir}'/20241105_Grunert_PVST_PRINGLS_PRINGLS_20240813_AWR.lis'
-
-
+# cruise='PVST_PRINGLS_PRINGLS_20240813'
+# iFile=${projDir}'/20241105_Grunert_PVST_PRINGLS_PRINGLS_20240813_AWR.lis'
+# cruise='PVST_PRINGLS_PRINGLS_20241003'
+# iFile=${projDir}'/20241221_Grunert_PVST_PRINGLS_PRINGLS_20241003_awr.lis'
+cruise='PVST_PRINGLS_PRINGLS_20240911'
+iFile=${projDir}'/20241221_Grunert_PVST_PRINGLS_PRINGLS_20240911_awr.lis'
 
 echo 'Downloading for LIS file: ' $iFile
 ####################

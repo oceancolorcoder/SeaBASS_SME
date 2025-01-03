@@ -14,7 +14,10 @@ wipe
 % cruise = 'PVST_PRINGLS_PRINGLS_20240417';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240513';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240612';
-cruise = 'PVST_PRINGLS_PRINGLS_20240717';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240717';
+% cruise = 'PVST_PRINGLS_PRINGLS_20241003';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240911';
+cruise = 'PVST_PRINGLS_PRINGLS_20240813';
 
 load(sprintf('dat/%s.mat',cruise)) % dBase from make_awr_seabass.m
 
@@ -27,8 +30,8 @@ M99ind = strcmp(rho,'M99');
 C3 = dBase(C3ind);
 M99 = dBase(M99ind);
 
-plotSpec = 0;
-plotScat = 0;
+plotSpec = 1;
+plotScat = 1;
 plotBA = 1;
 plotMet = 1;
 

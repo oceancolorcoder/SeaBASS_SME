@@ -40,7 +40,9 @@ wipe
 % cruise = 'NF2405_VIIRS';
 % cruise = 'CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240717';
-cruise = 'PVST_PRINGLS_PRINGLS_20240813';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240813';
+% cruise = 'PVST_PRINGLS_PRINGLS_20241003';
+cruise = 'PVST_PRINGLS_PRINGLS_20240911';
 
 [fontName,projPath,imgPath] = machine_prefs();                      % <-- Set this
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
