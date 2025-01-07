@@ -82,12 +82,12 @@ flagsManual = flags.Manual;
 if ~ancillary.SBA
     flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] | [flags.RelAz] | [flags.QWIP] |...
         [flags.Manual] | [flags.negRrs];
-    set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
 else
     flag = [flags.Cloud] | [flags.Wind] | [flags.SZA] |  [flags.QWIP] |...
         [flags.Manual] | [flags.negRrs];
-    set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
 end
+set(handles.th0,'String',sprintf('Manual: %d',sum(flagsManual)));
+set(handles.th8,'String',sprintf('Remaining: %d of %d',sum(~flag),AWR.nSpectra));
 
 flagSpectra(handles.ax11,AWR.wave,AWR.rrs,flags,1)
 flagSpectra(handles.ax12,AWR.wave,AWR.es,flags,0)

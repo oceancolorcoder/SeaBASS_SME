@@ -30,8 +30,9 @@ wipe
 %% Manual Setup
 
 % Set to true unless building .env.all for NOMAD/SeaBASS
-ancillary.validation = 1;
-ancillary.cruise = 'PACE-PAX_PACE-PAX';
+ancillary.validation = 0;
+
+% ancillary.cruise = 'PACE-PAX_PACE-PAX';
 % ancillary.cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
 % ancillary.cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
 % ancillary.cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
@@ -39,6 +40,8 @@ ancillary.cruise = 'PACE-PAX_PACE-PAX';
 % ancillary.cruise = 'EXPORTSNA_Boss';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2018';
+ancillary.cruise = 'PACE-PAX_PACE-PAX_shearwater';
+% ancillary.cruise = 'FRM4SOC2_FICE22';
 
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)

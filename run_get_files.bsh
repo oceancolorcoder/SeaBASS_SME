@@ -78,8 +78,12 @@ projDir='/Users/daurin/Projects/SeaBASS/JIRA_tickets'
 # iFile=${projDir}'/20241105_Grunert_PVST_PRINGLS_PRINGLS_20240813_AWR.lis'
 # cruise='PVST_PRINGLS_PRINGLS_20241003'
 # iFile=${projDir}'/20241221_Grunert_PVST_PRINGLS_PRINGLS_20241003_awr.lis'
-cruise='PVST_PRINGLS_PRINGLS_20240911'
-iFile=${projDir}'/20241221_Grunert_PVST_PRINGLS_PRINGLS_20240911_awr.lis'
+# cruise='PVST_PRINGLS_PRINGLS_20240911'
+# iFile=${projDir}'/20241221_Grunert_PVST_PRINGLS_PRINGLS_20240911_awr.lis'
+cruise='PACE-PAX_PACE-PAX_shearwater'
+iFile=${projDir}'/20241216_mannino_PACE-PAX_PACE-PAX_shearwater_AWR.lis'
+# cruise='FRM4SOC2_FICE22'
+# iFile=${projDir}'/20241216_mannino_FRM4SOC2_FICE22.lis'
 
 echo 'Downloading for LIS file: ' $iFile
 ####################

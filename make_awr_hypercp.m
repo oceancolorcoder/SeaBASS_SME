@@ -12,7 +12,7 @@
 wipe
 
 %% Setup
-cruise = 'PACE-PAX_PACE-PAX';
+
 % cruise = 'NORTHERN_INDIAN_OCEAN_EKAMSAT-EKAMSAT-2024-Bay-of-Bengal';
 % cruise = 'KORUS_KR_2016_RV_Onnuri_HyperSAS';
 % cruise = 'EXPORTS_EXPORTSNP_Mannino_AOP_HyperSAS_R0';
@@ -21,6 +21,8 @@ cruise = 'PACE-PAX_PACE-PAX';
 % cruise = 'EXPORTSNA_NASA';
 % cruise = 'EXPORTSNA_Boss';
 % cruise = 'viirs_2019_foster'; % Rejected for bad metadata, haha! (it's mine)
+cruise = 'PACE-PAX_PACE-PAX_shearwater';
+% cruise = 'FRM4SOC2_FICE22';
 
 
 %% Run
