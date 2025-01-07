@@ -31,25 +31,34 @@ import awr2env_tall_thomas
 # cruise='PVST_PRINGLS_PRINGLS_20240612'
 # cruise='CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022'
 # cruise='PVST_PRINGLS_PRINGLS_20240717'
-cruise='PVST_PRINGLS_PRINGLS_20240813'
+# cruise='PVST_PRINGLS_PRINGLS_20240813'
 # cruise='PVST_PRINGLS_PRINGLS_20241003'
 # cruise='PVST_PRINGLS_PRINGLS_20240911'
-
-tall_thomas = False
+# cruise='PACE-PAX_PACE-PAX_shearwater'
+# cruise='FRM4SOC2_FICE22'
+# cruise='PVST_POL_NF2405_VIIRS'
+# cruise='gilerson_VIIRS_VALIDATION_NF2405_VIIRS'
+cruise='mannino_VIIRS_VALIDATION_NF2405_VIIRS'
 
 metadata={}
-metadata['dataType']='AOP'
 
 # metadata['instrument']='HyperCP'
 # metadata['instrument']='TriOS'
-metadata['instrument']='SVC'
+# metadata['instrument']='SVC'
+# metadata['instrument']='ASD'
+metadata['instrument']='DALEC'
 
 # metadata['subInstrument']='pySAS'
 # metadata['subInstrument']='SolarTracker'
 # metadata['subInstrument']='SBA'
-metadata['subInstrument']='SVC'
+# metadata['subInstrument']='SVC'
 # metadata['subInstrument']='GER'
+# metadata['subInstrument']='HandHeld2'
+metadata['subInstrument']='DALEC'
 
+metadata['dataType']='AOP'
+
+tall_thomas = False
 
 if sys.platform == 'darwin':
     basePath = '/Users/daurin/Projects/SeaBASS/JIRA_tickets'
@@ -59,19 +68,21 @@ else:
 # inPath = os.path.join(basePath,cruise,'test')
 inPath = os.path.join(basePath,cruise)
 
-for all_flags in [True,False]:
-    # for type in ['Es','Rrs']:
-    for rad_type in ['Rrs']:
+for all_flags in [True,False]:    
+    # for rad_type in ['ES','RRS']:
+    # for rad_type in ['Es','Rrs']:
+    # for rad_type in ['Rrs']:       #         <------ Check this if File list empty
+    for rad_type in ['RRS']:
         if metadata['instrument'].lower() == 'hypercp':
             # non-STATIONs from HyperCP
             fileList = glob.glob(os.path.join(inPath,f'*{rad_type}_[!STATION]*.sb'))
-        elif metadata['instrument'].lower() == 'svc':
+        elif metadata['instrument'].lower() == 'svc' or metadata['instrument'].lower() == 'asd':
             fileList = glob.glob(os.path.join(inPath,'*.sb'))
         else:
             fileList = glob.glob(os.path.join(inPath,f'*{rad_type}_*.sb'))
 
         if not fileList:
-            print('File list is empty. Check path.')
+            print('File list is empty. Check path. Check rad_type cAsE.')
             print(f'{inPath}')
             break
 
@@ -87,7 +98,7 @@ for all_flags in [True,False]:
             dict_args['all'] = False
 
         # Convert cruise to .env or .env.all
-        if metadata['instrument'].lower() == 'hypercp':
+        if metadata['instrument'].lower() == 'hypercp' or metadata['instrument'].lower() == 'dalec':
             # For files with no wavelength column
             fileout_env = awr2env_wide.main(dict_args)
         else:

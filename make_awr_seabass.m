@@ -42,7 +42,13 @@ wipe
 % cruise = 'PVST_PRINGLS_PRINGLS_20240717';
 % cruise = 'PVST_PRINGLS_PRINGLS_20240813';
 % cruise = 'PVST_PRINGLS_PRINGLS_20241003';
-cruise = 'PVST_PRINGLS_PRINGLS_20240911';
+% cruise = 'PVST_PRINGLS_PRINGLS_20240911';
+% cruise = 'PVST_POL_NF2405_VIIRS';
+% cruise = 'gilerson_VIIRS_VALIDATION_NF2405_VIIRS';
+cruise = 'mannino_VIIRS_VALIDATION_NF2405_VIIRS';
+
+% Es and Rrs as separate SeaBASS files
+EsAndRrs = 1;                   % <--- Set to zero combined seabass files, 1 for separate Es and Rrs
 
 [fontName,projPath,imgPath] = machine_prefs();                      % <-- Set this
 projPath = fullfile(projPath,'SeaBASS','JIRA_tickets',cruise);
@@ -57,9 +63,6 @@ end
 
 % Use ls /path/path/*.sb > filelist.txt (full path filename list)
 fid = fopen(fullfile(projPath,'filelist.txt')); % <-- Full path list of seabass files (JIRA)
-
-% Es and Rrs as separate SeaBASS files
-EsAndRrs = 0;                   % <--- Set to zero combined seabass files, 1 for separate Es and Rrs
 
 %%
 fileList = textscan(fid,'%s\n');

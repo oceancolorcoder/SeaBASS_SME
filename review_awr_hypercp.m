@@ -40,8 +40,8 @@ ancillary.validation = 0;
 % ancillary.cruise = 'EXPORTSNA_Boss';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2019-2020';
 % ancillary.cruise = 'Brewin_Superyacht_Science_2018';
-ancillary.cruise = 'PACE-PAX_PACE-PAX_shearwater';
-% ancillary.cruise = 'FRM4SOC2_FICE22';
+% ancillary.cruise = 'PACE-PAX_PACE-PAX_shearwater';
+ancillary.cruise = 'FRM4SOC2_FICE22';
 
 clobber = 1;    % Re-evaluate thresholds and save over old
 plotQWIP = 1;   % Plot QWIP (x2)

@@ -21,8 +21,8 @@ wipe
 % cruise = 'EXPORTSNA_NASA';
 % cruise = 'EXPORTSNA_Boss';
 % cruise = 'viirs_2019_foster'; % Rejected for bad metadata, haha! (it's mine)
-cruise = 'PACE-PAX_PACE-PAX_shearwater';
-% cruise = 'FRM4SOC2_FICE22';
+% cruise = 'PACE-PAX_PACE-PAX_shearwater';
+cruise = 'FRM4SOC2_FICE22';
 
 
 %% Run

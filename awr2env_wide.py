@@ -213,10 +213,10 @@ def main(dict_args):
                 continue
 
             # Screen for flagged data
-            # if difference in flagDatetime and ds.dtime[i] is within 10 seconds...
+            # if difference in flagDatetime and ds.dtime[i] is within 60 seconds...
             dateTimeDiff = [ds.dtime[i] - fDt for fDt in flagDatetime]
             absDTdiffsec = [abs(x.total_seconds()) for x in dateTimeDiff]
-            if min(absDTdiffsec) < 10:
+            if min(absDTdiffsec) < 60:
                 index = absDTdiffsec.index(min(absDTdiffsec))
                 # print(f'Match found {absDTdiffsec[index]} seconds from flag file')
             else:

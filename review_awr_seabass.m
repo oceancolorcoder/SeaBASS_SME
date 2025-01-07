@@ -52,14 +52,17 @@ ancillary.validation = 1;
 % ancillary.cruise = 'NF2405_VIIRS';
 % ancillary.cruise = 'CHESAPEAKE_BAY_HELICOPTER_Chesapeake_Bay_2022';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240717';
-ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240813';
+% ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240813';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20241003';
 % ancillary.cruise = 'PVST_PRINGLS_PRINGLS_20240911';
+% ancillary.cruise = 'PVST_POL_NF2405_VIIRS';
+% ancillary.cruise = 'gilerson_VIIRS_VALIDATION_NF2405_VIIRS';
+ancillary.cruise = 'mannino_VIIRS_VALIDATION_NF2405_VIIRS';
 
 SMEPath = fullfile(projPath,'SeaBASS','JIRA_Tickets',ancillary.cruise); % <-- Set this; used to write plots
 
 ancillary.SBA = 0;                                          % <-- Set this (1 for SBA)
-ancillary.skipLi = 0;                 % Used for cloud index. May not be available, even for non-SBA
+ancillary.skipLi = 1;                 % Used for cloud index. May not be available, even for non-SBA like DALEC preliminary
 
 % relAz = 90;               % If not provided per cast, but reported as +/-90   % <-- Check this
 % relAz = 135;              % If not provided per cast, but reported as +/-135
@@ -87,6 +90,9 @@ if clobber
         AWR.wave = dBase(1).wavelength;
     catch
         AWR.wave = dBase(1).rrs_wavelength;
+        % if isempty(AWR.wave)
+        %     AWR.wave = dBase(1).es_wavelength;
+        % end
     end
     
     AWR.wave_sd = min(AWR.wave):20:max(AWR.wave); % Subset for errorbars
@@ -130,7 +136,7 @@ if clobber
     end
     if ~ancillary.SBA && ~ancillary.skipLi
         if ~isfield(AWR,'li')
-            disp('****Check that this is not SBA****')
+            disp('**** Check that this is not SBA or DALEC (skip Li) ****')
             return
         end
         % Fill in with cloud index where empty
